@@ -1,0 +1,25 @@
+//生成bundle
+ php app/console generate:bundle --namespace=Acme/StoreBundle
+ 
+ //创建数据库
+ php app/console doctrine:database:create
+ 
+ //生成实体；
+ php app/console doctrine:generate:entity
+ 
+ //在实体中生成getName 和 setName 方法；
+ php app/console doctrine:generate:entities Acme/StoreBundle/Entity/Product
+ php app/console doctrine:generate:entities AcmeStoreBundle  //生成所有实体
+ 
+ //根据实体把数据更新到数据库;自动创建表；
+ php app/console doctrine:schema:update --force
+ 
+//根据已经有的表生成实体；
+ php app/console doctrine:mapping:import --force AcmeDemoBundle xml
+ php app/console doctrine:mapping:import --filter="Users" --force AcmeDemoBundle //只生成 users表；注意大小写；
+ 
+php app/console doctrine:mapping:convert annotation ./src  //转换成注释模式
+php app/console doctrine:generate:entities AcmeDemoBundle
+ 
+ 
+ 

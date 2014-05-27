@@ -1,0 +1,76 @@
+控制器；
+这个不多说；和其他控制差不多；
+sf2控制器最后的结果都是要返回一个Response对象；
+官方文档http://symfony.com/doc/current/book/controller.html 
+
+难点就是如果配置路由
+一般的话就是在自己的bundle下面  Resources/config/routing.yml  配置路由
+
+hello: #这个hello 是路由名称  在generateUrl()的时候可以用到这个名称；会自动生成这个路由
+    path:      /hello/{name}	#这个就是匹配的URL 
+	#这个指向那个控制器，那个方法 这个就是  Acme\DemoBundle\Controller\HelloController.php中indexAction方法；
+    defaults:  { _controller: AcmeHelloBundle:Hello:index } 
+
+发送子请求
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+  //发送子请求
+        $path = array(
+            '_controller' => 'AcmeDemoBundle:Welcome:testforward',
+            'name' => 'haha',
+            'color' => 'yellow',
+        );
+        $request = $this->container->get("request");
+        $subRequest = $request->duplicate(array(), null, $path);
+
+        $httpKernel  = $this->container->get('http_kernel');
+        $reponse = $httpKernel->handle(
+            $subRequest,
+            HttpKernelInterface::SUB_REQUEST
+        );
+        var_dump($reponse->getContent());
+        return $reponse;
+	
+	
+redirect 重定向的使用	
+return $this->redirect($this->generateUrl('_testdemo'));
+
+forward的使用；
+public function testAction()
+{
+	return $this->forward(
+		"AcmeDemoBundle:Welcome:testforward",
+		array(
+		   'name'=>'haha',
+		   'color'=>'white',
+	   )
+	);
+}
+
+//渲染模板； renderView 返回模板字符串；
+$content = $this->renderView(
+    'AcmeHelloBundle:Hello:index.html.twig',
+    array('name' => $name)
+);
+return new Response($content);
+
+render()是直接返回 Response对象；
+return $this->render(
+    'AcmeHelloBundle:Hello:index.html.twig',
+    array('name' => $name)
+);
+
+//session的应用；
+
+ $request = $this->container->get("request");
+ $session = $request->getSession();
+ $session->set('test', 'testValue');
+ $session->get("testNull", 'testNull') //第二个参数是默认值
+ 
+ request 类的
+ $request->isXmlHttpRequest(); // is it an Ajax request?
+ $request->getPreferredLanguage(array('en', 'fr'));
+ $request->query->get('page'); // get a $_GET parameter
+ $request->request->get('page'); // get a $_POST parameter
+ 
+ 
+ 

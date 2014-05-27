@@ -1,0 +1,169 @@
+一个服务容器，也叫做依赖注入容器，仅仅是一个PHP对象，用于管理服务的实例化。
+说白了就是管理我们  各个类的实例化；有助于管理；
+
+例如 我们有一个 Mail 发送邮件类；我在每个控制器中都去  new Mail();
+如果我们要修改mail 中的参数；就需要在每个 new 的地方去修改
+
+在配置文件中设置 服务容器；
+
+yml格式
+	services:
+		my_mailer:
+			class: Acme\HelloBundle\Mailer
+			arguments: [sendmail]
+xml格式
+	<services>
+		<service id="my_mailer" class="Acme\HelloBundle\Mailer">
+			<argument>sendmail</argument>
+		</service>
+	</services>
+		
+my_mailer 是服务名称 class 是类名  argument 是参数
+
+参数可以传数组； http://symfony.com/doc/current/components/dependency_injection/parameters.html#component-di-parameters-array
+yml 
+ parameters:
+	my_mailer.gateways:
+		- mail
+		- mail2
+		- mail3
+	my_multilang.language_fallback:
+		en:
+			-en
+			-fr
+		fr:
+			-fr
+			-en
+
+xml 配置需要指定  type="collection"
+<parameters>
+    <parameter key="my_mailer.gateways" type="collection">
+        <parameter>mail1</parameter>
+        <parameter>mail2</parameter>
+        <parameter>mail3</parameter>
+    </parameter>
+    <parameter key="my_multilang.language_fallback" type="collection">
+        <parameter key="en" type="collection">
+            <parameter>en</parameter>
+            <parameter>fr</parameter>
+        </parameter>
+        <parameter key="fr" type="collection">
+            <parameter>fr</parameter>
+            <parameter>en</parameter>
+        </parameter>
+    </parameter>
+</parameters>
+//使用 %% 可以传入 parameters中参数；
+services:
+  test_server:
+      class: "%mail.class%"
+      arguments: ["%mail.params%"]
+	  
+使用  import 导入其它容器配置资源
+一般我们在bundle 中的 Resources/config/service.xml中定义相关服务
+
+在总配置config.yml中导入;
+imports:
+    - { resource: @AcmeHelloBundle/Resources/config/services.yml }
+	  
+引用（注入）服务
+
+及我们用服务做为参数传入其它服务中；
+yml 配置
+services:
+  test_server:
+      class: "%mail.class%"
+      arguments: ["%mail.params%"]
+  new_test:
+      class: "%newmail.class%"
+      arguments: [@test_server]	
+	  
+xml 
+
+<parameters>
+    <!-- ... -->
+    <parameter key="newsletter_manager.class">Acme\HelloBundle\Newsletter\NewsletterManager</parameter>
+</parameters>
+
+<services>
+    <service id="my_mailer" ... >
+      <!-- ... -->
+    </service>
+    <service id="newsletter_manager" class="%newsletter_manager.class%">
+        <argument type="service" id="my_mailer"/>
+    </service>
+</services>
+
+
+通过 构造函数，setMail 方法设置传入过来的服务；
+<?php
+namespace Site\TestBundle\Form;
+
+class NewTest
+{
+    public $mail;
+
+//    public function __construct($mail)
+//    {
+//        $this->mail = $mail;
+//    }
+
+    public function setMail($mail){
+        $this->mail = $mail;
+    }
+    public function test()
+    {
+        echo "newTest<br/>";
+        $this->mail->helloTest();
+    }
+}
+
+
+//可选 注入服务；及是可以传入服务参数；也可以不传
+yml 
+services:
+    newsletter_manager:
+        class:     %newsletter_manager.class%
+        arguments: [@?my_mailer]
+
+Xml
+<services>
+    <service id="my_mailer" ... >
+      <!-- ... -->
+    </service>
+    <service id="newsletter_manager" class="%newsletter_manager.class%">
+        <argument type="service" id="my_mailer" on-invalid="ignore" />
+    </service>
+</services>
+
+//在设置服务时 参数给个默认值；
+public function __construct(Mailer $mailer = null)
+{
+    // ...
+}
+	  
+	 
+注入两个服务参数
+yml 
+services:
+    newsletter_manager:
+        class:     %newsletter_manager.class%
+        arguments: [@mailer, @templating]	 
+		
+xml
+<service id="newsletter_manager" class="%newsletter_manager.class%">
+    <argument type="service" id="mailer"/>
+    <argument type="service" id="templating"/>
+</service>
+
+服务的私有和公有  私有的不能在外部直接 $this->get("foo"); 只能注入到其他服务中
+yml 
+services:
+   foo:
+     class: Acme\HelloBundle\Foo
+     public: false
+	bar:
+		alias: foo 设置别名外部就可以通过 bar 访问到 私有的 foo服务；
+xml
+<service id="foo" class="Acme\HelloBundle\Foo" public="false" />
+	  

@@ -1,0 +1,411 @@
+symfony2  php5.4  nginx/1.5.9  win7
+
+前面已经写了 nginx 和 php 的安装；
+先让 nginx 支持 pathinfo
+nginx.conf
+server {
+        listen       8080;
+        server_name  www.symfony.test;
+        location / {
+            root   E:\\nginx\html\symfony2\web;
+            index  index.php index.html index.htm;
+        }
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+        location ~ ^(.+\.php)(.*)$ {
+		  root   E:\\nginx\html\symfony2\web;
+	      fastcgi_index index.php;
+	      fastcgi_split_path_info ^(.+\.php)(.*)$; 
+		  fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name; 
+	      fastcgi_param   PATH_INFO               $fastcgi_path_info; 
+	      fastcgi_param   PATH_TRANSLATED $document_root$fastcgi_path_info; 
+	      fastcgi_pass 127.0.0.1:9000; 
+	      include fastcgi_params;	
+        }
+}
+在看看 symfony2 的安装；
+先配置 环境变量(我的电脑-->属性-->高级设置[在左侧]-->高级-->环境变量-->把php安装路径复制到后面) 能在 cmd 下运行 php -v
+在安装composer (管理php各种依赖包) http://www.kankanews.com/ICkengine/archives/19110.shtml
+打开php扩展 openssl ;进入项目目录  php -r "eval('?>'.file_get_contents('https://getcomposer.org/installer'));";
+php composer.phar install 
+
+symfony2 的安装；
+php composer.phar create-project symfony/framework-standard-edition 项目名称(路径)/ 2.4.0
+在这个过程会涉及到填写配置信息；自己看着写；
+
+建立bundle
+创建 bundle
+php app/console generate:bundle
+Bundle namespace: Site/HomeBundle  //注意这
+Bundle name [SiteHomeBundle]:
+Target directory [/home/saharabear/workspace/symfony-sample/src]:
+Configuration format (yml, xml, php, or annotation): annotation  //annotation 是注释配置；
+Do you want to generate the whole directory structure [no]? yes
+Do you confirm generation [yes]? yes
+Generating the bundle code: OK
+Checking that the bundle is autoloaded: OK
+Confirm automatic update of your Kernel [yes]? yes
+Enabling the bundle inside the Kernel: OK
+Confirm automatic update of the Routing [yes]? yes
+
+
+创建实体
+$php app/console generate:doctrine:entity  //这里 一
+
+    Welcome to the Doctrine2 entity generator
+
+    This command helps you generate Doctrine2 entities.
+
+    First, you need to give the entity name you want to generate.
+    You must use the shortcut notation like AcmeBlogBundle:Post.
+    The Entity shortcut name: SiteHomeBundle:Article //这里 二
+
+    Determine the format to use for the mapping information.
+
+    Configuration format (yml, xml, php, or annotation) [annotation]:
+    Instead of starting with a blank entity, you can add some fields now.
+    Note that the primary key will be added automatically (named id).
+
+    Available types: array, simple_array, json_array, object,
+    boolean, integer, smallint, bigint, string, text, datetime, datetimetz,
+    date, time, decimal, float, blob, guid.
+
+    New field name (press  to stop adding fields): title
+    Field type [string]:
+    Field length [255]: 200
+
+    New field name (press  to stop adding fields): content
+    Field type [string]: text
+
+    New field name (press  to stop adding fields): author
+    Field type [string]:
+    Field length [255]: 20
+
+    New field name (press  to stop adding fields):
+
+    Do you want to generate an empty repository class [no]? yes
+
+    Summary before generation
+
+    You are going to generate a "SymfonySampleBundle:Article" Doctrine2 entity
+    using the "annotation" format.
+
+    Do you confirm generation [yes]? yes
+
+    Entity generation
+
+    Generating the entity code: OK
+
+    You can now start using the generated code! 
+	
+//数据库会自动生成表；
+$php app/console doctrine:schema:update --force
+
+
+symfony2路由配置
+这里只说  yml,和anotation 方式
+
+打开 app/config/routing_dev.yml 路由
+
+_wdt:
+    resource: "@WebProfilerBundle/Resources/config/routing/wdt.xml"
+    prefix:   /_wdt
+
+_profiler:
+    resource: "@WebProfilerBundle/Resources/config/routing/profiler.xml"
+    prefix:   /_profiler
+
+_configurator:
+    resource: "@SensioDistributionBundle/Resources/config/routing/webconfigurator.xml"
+    prefix:   /_configurator
+
+_main:
+    resource: routing.yml
+	
+#上面是默认配置不管他
+# AcmeDemoBundle routes (to be removed)
+_acme_demo:  #这个就是项目名_bundle名
+    resource: "@AcmeDemoBundle/Resources/config/routing.yml"  #这就是采用了yml格式 指定配置路径；
+	
+	
+bundle下路由配置文件
+_welcome:
+    pattern:  /
+    defaults: { _controller: AcmeDemoBundle:Welcome:index }
+
+_demo_secured:
+    resource: "@AcmeDemoBundle/Controller/SecuredController.php"
+    type:     annotation #这就是采用 annotation(php注释)配置
+
+_demo:
+    resource: "@AcmeDemoBundle/Controller/DemoController.php"
+    type:     annotation
+    prefix:   /demo
+_test:
+    pattern:  /test
+    defaults: { _controller: AcmeDemoBundle:Test:index }
+
+我门创建一个TestBundle
+php app/console generate:bundle  
+创建的时候以yml 配置
+创建完毕之后会在  app/config/routing.yml 文件中增加一条配置
+site_test:
+    resource: "@SiteTestBundle/Resources/config/routing.yml"
+    prefix:   /
+在src/Site/TestBundle/Resources/config/routing.yml
+site_test_homepage: #这个其实就是 路由名称 取啥无所谓
+    pattern:  /hello/{name} //匹配模式
+    defaults: { _controller: SiteTestBundle:Default:index } //这就是指向控制器
+//我们在控制器中在加入一个 操作法
+funtion testAction(){
+
+}
+我们在 src/Site/TestBundle/Resources/config/routing.yml 中加入
+site_test_haha:
+    pattern:  /test/test
+    defaults: {_controller:SiteTestBundle:Default:test}
+
+在看看  anotation配置；
+
+重定向:
+return $this->redirect($this->generateUrl('homepage'));
+
+public function indexAction()
+{
+    return $this->redirect($this->generateUrl('homepage',可以传递参数), 301);
+}
+
+//内部跳转；
+public function indexAction($name)
+{
+    $response = $this->forward('AcmeHelloBundle:Hello:fancy', array(
+        'name'  => $name,
+        'color' => 'green'
+    ));
+
+    // further modify the response or return it directly
+
+    return $response;
+}
+ 
+ 
+ 404页面管理
+ if (!$product) {
+        throw $this->createNotFoundException('The product does not exist');
+    }
+
+session 管理；
+
+$session = $this->getRequest()->getSession();
+// 为用户的后一个请求使用存储一个属性
+$session->set('foo', 'bar');
+
+// 在另一个controller中为另一个请求获取该属性
+$foo = $session->get('foo');
+
+// 设置用户的本地化语言
+$session->setLocale('fr');
+
+
+跳转提示
+public function updateAction()
+{
+    $form = $this->createForm(...);
+
+    $form->bindRequest($this->getRequest());
+    if ($form->isValid()) {
+        // 做些排序处理
+
+        $this->get('session')->setFlash('notice', 'Your changes were saved!');
+
+        return $this->redirect($this->generateUrl(...));
+    }
+
+    return $this->render(...);
+}
+
+//创建一个基于JSON的Response对象，状态码也为200
+$response = new Response(json_encode(array('name'=>$name)));
+$response->headers->set('content-type','application/json');
+
+$request = $this->getRequest();
+
+$request->isXmlHttpRequest(); // 判断是不是Ajax请求
+
+$request->getPreferredLanguage(array('en','fr'));
+
+$request->query->get('page'); // 获取$_GET 参数
+
+$request->request->post('page'); //获取$_POST参数
+ 
+{% block sidebar %}
+    <h3>Table of Contents</h3>
+    ...
+    {{ parent() }}可以获取父模板中的内容；
+{% endblock %}
+
+模板中 include;
+{% for article in articles %}
+	{% include 'AcmeArticleBundle:Article:articleDetails.html.twig' with {'article': article} %}
+{% endfor %}
+传递多个参数；
+可以写成{'foo': foo, 'bar': bar}
+
+//在模板中包含一个控制器；控制器照常渲染模板；
+<div id="sidebar">
+     {{ render(controller('SiteHomeBundle:Default:reclist',{'number':1})) }}
+</div>
+
+图片使用 asset();
+<img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
+<link href="{{ asset('css/blog.css') }}" rel="stylesheet" type="text/css" />
+
+当AcmeBlogBundle:Blog:index.html.twig被渲染时，Symfony2 会查找两个位置来定位模板：
+1. app/Resources/AcmeBlogBundle/views/Blog/index.html.twig
+2. src/Acme/BlogBundle/Resources/views/Blog/index.html.twig
+
+
+
+//按照名字和价格来获取一个匹配的对象
+$product=$repository->findOneBy(array('name'=>'foo','price'=>19.99));
+
+//查询匹配名字的所有产品并按照价格排序
+$products = $repository->findBy(
+        array('name'=> 'foo'),
+        array('price'=>'ASC')
+);
+
+修改一条数据
+
+$em = $this->getDoctrine()->getManager();
+$res = $em->getRepository("SiteHomeBundle:Article");
+$article = $res->find(1);
+$article->setName("testeetete1");
+$em->flush();
+
+//写sql 查询；
+  $query =  $em->createQuery(
+            "SELECT p FROM SiteHomeBundle:Article p WHERE p.name=:name ORDER BY p.id ASC "
+        )->setParameter('name','ccc');
+       // $row =$query->getResult();//返回数组；
+        $product = $query->getSingleResult();//返回对象
+		$query->getSingleScalarResult();
+连贯操作
+ $query =  $res->createQueryBuilder('a')->where("a.name=:name")->setParameters(array('name'=>'ccc'))->orderBy('a.id','asc')->getQuery();
+ 
+ 
+ 
+ 　 form_enctype(form) 只要有一个字段是文件上传，那么它就会义务的设置为 enctype="multipart/form-data";
+　　form_errors(form) 渲染任何整个form的任何错误信息(特定字段的错误，会显示在每个字段的下面一行）。
+　　form_row(form.dueDate) 默认情况下，为给定的字段在一个div中渲染一个文本标签，任何错误，和HTML表单部件。
+　　form_rest(form) 渲染没有指出的其余任何字段，通常在表单的末尾调用它防止遗忘或者渲染一些你不愿意手动设置的隐藏字段。它同时还能为我们提供CSRF保护。
+
+　　大部分工作是由form_row帮助方法类完成的，它默认在一个div中为每个字段渲染显示标签，错误信息和HTML表单部件。
+　　注意，你可以通过form.vars.value 来访问你当前是表当数据：
+
+app/console doctrine:generate:entities
+
+生成自定义的 Repository 类；
+在Entity的模型类上面加入；
+/**
+ * Article
+ * @ORM\Entity(repositoryClass="Site\HomeBundle\Entity\ArticleRepository") 这里重点
+ * @ORM\Table()
+ *
+ */
+class Article
+{
+    /**
+     * @var integer
+     *
+最后控制台  php app/console doctrine:generate:entities Site  会自动生成 ArticleRepository类；
+
+Symfony2使用两个类可以非常容易地与请求和响应交互，从而取代原始的PHP方式。Request类是HTTP请求面向对象的简单表示。有了它，你获取请求信息将易如反掌。
+use Symfony\Component\HttpFoundation\Request; 
+ 
+$request = Request::createFromGlobals(); 
+ 
+// 请求的URI (如：/about) ，没有任何查询参数
+$request->getPathInfo(); 
+ 
+// 分别检索GET和POST变量 
+$request->query->get('foo'); 
+$request->request->get('bar'); 
+ 
+// 检索被foo标识的UploadedFile实例 
+$request->files->get('foo'); 
+ 
+$request->getMethod();          // GET, POST, PUT, DELETE, HEAD 
+$request->getLanguages();       // 客户端接受语言的数组 
+
+数据库操作学习；
+$em = $this->getDoctrine()->getManager();
+$res = $em->getRepository("SiteHomeBundle:Article");
+$queryBuilder = $res->createQueryBuilder(别名)；
+$queryBuilder->addWhere("可以写where条件  $"); 
+$queryBuilder->select("需要查询的字段");
+//$queryBuilder->andWhere($queryBuilder->expr()->isNotNull('o.completedAt'));
+$queryBuilder->expr()->isNotNull('o.completedAt')
+$queryBuilder->expr()->isNull('o.completedAt') //可以查查ORM 
+
+
+symfony2 安全配置
+  通过http 认证；
+	设置app/config/security.yml;
+	
+	security: 
+    firewalls: 
+        secured_area: 
+            pattern:    ^/ 
+            anonymous: ~ 
+			#使用http  弹出框 验证
+            http_basic: 
+                realm: "Secured Demo Area" 
+			#使用表单验证；
+				
+	
+    access_control: 
+        - { path: ^/admin, roles: ROLE_ADMIN } 
+ 
+    providers: 
+	#通过文件保存用户；
+        in_memory: 
+            users: 
+                ryan:  { password: ryanpass, roles: 'ROLE_USER' } 
+                admin: { password: kitten, roles: 'ROLE_ADMIN' } 
+ 
+    encoders: 
+        Symfony\Component\Security\Core\User\User: plaintext 
+		
+	如果你的用户名完全是数字（如77）或包含短横线（如user-name），那么当在YAML中指定用户时，你需要使用另一种语法：
+users: 
+    - { name: 77, password: pass, roles: 'ROLE_USER' } 
+    - { name: user-name, password: pass, roles: 'ROLE_USER' } 
+
+在控制器中验证权限；
+public function helloAction($name) 
+{ 
+    if (false === $this->get('security.context')->isGranted('ROLE_ADMIN')) { 
+        throw new AccessDeniedException(); 
+    } 
+    // ... 
+} 
+
+文件上传
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+public function uploadAction()
+{
+    // ...
+
+    if ($form->isValid()) {
+        $someNewFilename = ...
+
+        $form['attachment']->getData()->move($dir, $someNewFilename);
+
+        // ...
+    }
+
+    // ...
+}
