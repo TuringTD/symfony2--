@@ -1,0 +1,70 @@
+symfony2 具有非常好的路由系统；可以任意配置的url 
+官方文档：
+http://symfony.com/doc/current/book/routing.html
+
+配置路由默认值
+testpage:
+    pattern:  /page/{page}
+    defaults: { _controller: AcmeDemoBundle:Welcome:testpage,page: 1 }
+此时也可以不用传page参数；
+
+blog:
+    path:      /blog/{page}
+    defaults:  { _controller: AcmeBlogBundle:Blog:index, page: 1 }
+
+blog_show:
+    path:      /blog/{slug}
+    defaults:  { _controller: AcmeBlogBundle:Blog:show }
+	
+这种有冲突的路由；只会匹配第一个 
+
+可以使用requirements来区分；
+blog:
+    path:      /blog/{page}
+    defaults:  { _controller: AcmeBlogBundle:Blog:index, page: 1 }
+	requirements:
+		page:\d+
+		# culture:  en|fr #这是表示这个参数只能传入 这两个值；
+	methods:  [GET] #设置路由的访问方法；这样也可以区分两个一样的路由；
+		
+这样就可以区分和blog_show的区别了 但是 blog 必须在blog_show之上；
+
+包含路由
+
+# app/config/routing.yml
+acme_hello:
+    resource: "@AcmeHelloBundle/Resources/config/routing.yml"
+导入路由之前可以给路由加前缀
+# app/config/routing.yml
+acme_hello:
+    resource: "@AcmeHelloBundle/Resources/config/routing.yml"
+    prefix:   /admin
+	
+调试路由，即查看已有路由信息；
+php app/console router:debug
+查看单个路由信息	
+php app/console router:debug article_show
+
+在控制器中使用
+$params = $this->get('router')->match('/blog/my-blog-post');
+// array(
+//     'slug'        => 'my-blog-post',
+//     '_controller' => 'AcmeBlogBundle:Blog:show',
+// )
+
+$uri = $this->get('router')->generate('blog_show', array('slug' => 'my-blog-post'));
+// /blog/my-blog-post
+简洁方式
+$url = $this->generateUrl( 'blog_show',array('slug' => 'my-blog-post'));
+
+模板中生成 URL
+<a href="{{ path('blog_show', {'slug': 'my-blog-post'}) }}">
+  Read this blog post.
+</a>
+
+生成绝对路径
+$this->generateUrl('blog_show', array('slug' => 'my-blog-post'), true);//加了第三个参数
+模板中生成通过 url 
+<a href="{{ url('blog_show', {'slug': 'my-blog-post'}) }}">
+  Read this blog post.
+</a>

@@ -21,5 +21,9 @@
 php app/console doctrine:mapping:convert annotation ./src  //转换成注释模式
 php app/console doctrine:generate:entities AcmeDemoBundle
  
- 
- 
+调试路由
+php app/console router:debug
+查看单个路由信息
+php app/console router:debug article_show
+hp app/console router:match /blog/my-latest-post 匹配测试单个路由
+
