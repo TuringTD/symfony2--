@@ -1,0 +1,85 @@
+验证实体对象；
+
+建立一个实体,配置验证规则
+# src/Acme/BlogBundle/Resources/config/validation.yml
+Acme\BlogBundle\Entity\Author:
+    properties:
+        name:
+            - NotBlank: ~ //验证项可以参考文档；http://symfony.com/doc/current/book/validation.html
+
+controller中验证；
+
+$author = new Author();
+$validator = $this->get('validator');
+$errors = $validator->validate($author);
+
+注意配置；
+# app/config/config.yml
+framework:
+    validation: { enable_annotations: true } 如果为true的话是通过　注释　验证的；前面的例子应该设为false
+	
+验证组
+# src/Acme/BlogBundle/Resources/config/validation.yml
+Acme\BlogBundle\Entity\User:
+    properties:
+        email:
+            - Email: { groups: [registration] }  
+        password:
+            - NotBlank: { groups: [registration] }
+            - Length: { min: 7, groups: [registration] }
+        city:
+            - Length:
+                min: 2
+				
+$errors = $validator->validate($author, array('registration'));
+
+验证顺序
+# src/Acme/BlogBundle/Resources/config/validation.yml
+Acme\BlogBundle\Entity\User:
+    group_sequence:
+        - User
+        - Strict
+    getters:
+        passwordLegal: 对应函数 isPasswordLegal 或者 getPasswordLegal 
+            - "True":
+                message: "The password cannot match your username"
+                groups: [Strict]
+    properties:
+        username:
+            - NotBlank: ~
+        password:
+            - NotBlank: ~
+
+实体中；
+public function isPasswordLegal()
+{
+    return $this->firstName != $this->password;
+}
+			
+直接验证值；
+use Symfony\Component\Validator\Constraints\Email;
+// ...
+public function addEmailAction($email)
+{
+    $emailConstraint = new Email();
+    // all constraint "options" can be set this way
+    $emailConstraint->message = 'Invalid email address';
+
+    // use the validator to validate the value
+    $errorList = $this->get('validator')->validateValue(
+        $email,
+        $emailConstraint
+    );
+
+    if (count($errorList) == 0) {
+        // this IS a valid email address, do something
+    } else {
+        // this is *not* a valid email address
+        $errorMessage = $errorList[0]->getMessage();
+
+        // ... do something with the error
+    }
+
+    // ...
+}
+
