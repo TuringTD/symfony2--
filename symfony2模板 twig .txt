@@ -1,0 +1,82 @@
+变量
+{{ var }}
+
+循环
+ {% for item in navigation %}
+     <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+{% endfor %}
+
+{# 注释 #}
+
+变量调节器
+{{ title|upper }}
+
+更多调节器
+http://twig.sensiolabs.org/doc/filters/index.html
+
+
+模板继承
+{% extend '::base.html.twig ' %}  这个在 app/Resource/views/base.html.twig
+{% extend 'AcmeDemoBundle::base.html.twig ' %}  这个在 src/Acme/DemoBundle/views/base.html.twig
+
+{% block name %}
+
+{% endblock %}
+
+在子模板中继承实现block； 
+
+parent();
+
+包含模板：
+{{ include(
+            'AcmeArticleBundle:Article:articleDetails.html.twig',
+            { 'article': article, 'twoPar': 'twoVlaue' }
+        ) }}
+
+		
+在模板中调用控制器；	
+ {% block content %}
+   {{ render(url('site_admin_new', {'name': 'value'})) }}
+   {{ render(controller('SiteAdminBundle:Default:test', {'name':'test'})) }}
+{% endblock %}
+
+异步调用
+{{ render_hinclude(controller('...')) }}
+{{ render_hinclude(url('...')) }}
+
+默认模板配置
+framework:
+    # ...
+    templating:
+        hinclude_default_template: AcmeDemoBundle::hinclude.html.twig
+
+{{ render_hinclude(controller('...'),  {
+    'default': 'AcmeDemoBundle:Default:content.html.twig'
+}) }}
+
+连接页面
+<a href="{{ path('_welcome', {'t1':'v1'}) }}">Home</a>
+<a href="{{ url('_welcome') }}">Home</a>
+
+三级继承
+app/Resource/views/  {% extends '::base.html.twig' %}
+src/Acme/DemoBundle/views  {% extends 'AcmeBlogBundle::layout.html.twig' %}
+src/Acme/DemoBundle/views/Blog/  AcmeBlogBundle:Blog:layout.html.twig
+
+
+转义输出；
+{{ article.body|raw }}
+
+twig 扩展；一个过滤器；一个function
+
+过滤器：
+
+http://symfony.com/doc/current/cookbook/templating/twig_extension.html
+
+function :
+
+
+
+
+
+
