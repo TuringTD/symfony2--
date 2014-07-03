@@ -29,5 +29,12 @@ php app/console router:debug article_show
 hp app/console router:match /blog/my-latest-post 匹配测试单个路由
 
 单元测试某一个bundle
-E:\nginx\html\wintelapi>phpunit -c app src/Wintel/RestBundle/Tests/Controller/QueueControllerTest
+phpunit -c app src/Wintel/RestBundle/Tests/Controller/QueueControllerTest
+
+根据数据库 生成映射的doctrine orm 配置文件；
+php app/console doctrine:mapping:import --force AcmeBlogBundle xml（yml)
+php app/console doctrine:mapping:convert annotation ./src  //这是转换成annotation 如果是xml,yml 配置就不需要执行该条命令；
+php app/console doctrine:generate:entities AcmeBlogBundle  //这个就是生成实体问题了；
+生成制定实体
+php app/console doctrine:mapping:import SiteAdminBundle xml --filter=Category
 
