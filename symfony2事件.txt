@@ -1,0 +1,153 @@
+如何通过表单事件 动态的修改表单
+
+//根据数据对象来生成
+1，增加一个事件监听者
+<?php
+namespace Site\AdminBundle\Form\Type;
+
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+
+class TaskType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder
+            ->add('task', 'textarea')
+            ->add('duedate')
+            ->add('teste', null, array('mapped' => false))
+            ->add('save', 'submit');
+		//增加一个事件监听者	当FormEvents::PRE_SET_DATA事件被触发就调用方法
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
+             $form = $event->getForm();
+             $task= $event->getData();
+            if (!$task || null === $task->getId()) {
+                $form->add('name', 'text', array('mapped'=>false));
+            }
+        });
+
+    }
+	
+2，可以建立一个事件订阅类；提高可重用性；
+<?php
+namespace Site\AdminBundle\EventListener;
+
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
+
+class AddNameFieldSubscriber implements EventSubscriberInterface
+{
+    /**
+     * @return array
+     */
+    public static function getSubscribedEvents()
+    {
+        return array(FormEvents::PRE_SET_DATA=>'preSetData');
+    }
+
+    public function preSetData(FormEvent $event)
+    {
+        $form = $event->getForm();
+        $data = $event->getData();
+        if (!$data || null === $data->getId()) {
+            $form->add('name', 'text', array('mapped'=>false));
+        }
+    }
+}
+
+表单类就可以写成
+$builder->addEventSubscriber(new AddNameFieldSubscriber()); //注意是addEventSubscriber方法
+
+二: 根据用户动态生成
+1，创建表单类型
+    private $securityContext;
+	//注入SecurityContext
+    public function __construct(SecurityContext $securityContext)
+    {
+        $this->securityContext = $securityContext;
+    }
+
+    /**
+     * @param FormBuilderInterface $builder
+     * @param array $options
+     * @throws \LogicException
+     */
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder
+            ->add('task', 'textarea')
+            ->add('duedate')
+            ->add('teste', null, array('mapped' => false))
+        $user = $this->securityContext->getToken()->getUser(); //获取用户实体;
+        if (!$user) {
+            throw new \LogicException(
+                'The FriendMessageFormType cannot be used without an authenticated user!'
+            );
+        }
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($user) {
+            $form = $event->getForm();
+            $formOptions = array(
+                'class' => 'Acme\DemoBundle\Entity\User',
+                'property' => 'fullName',
+                'query_builder' => function (EntityRepository $er) use ($user) {
+
+                },
+            );
+            $form->add('friend', 'entity', $formOptions);
+        });
+    }
+	
+2,配置服务；
+# app/config/config.yml
+services:
+    acme.form.friend_message:
+        class: Acme\DemoBundle\Form\Type\FriendMessageFormType
+        arguments: ["@security.context"]
+        tags:
+            - { name: form.type, alias: acme_friend_message }	
+						
+三: 根据提交动态生成
+$builder
+	->add('category', 'entity', array(
+		'class'       => 'AcmeDemoBundle:Category',
+		'empty_value' => '',
+		'property' => 'name', //需要使用property;要不就在实体中定义__ToString方法;
+
+	));
+$formModifier = function (FormInterface $form, Category $sport = null) {
+	$postions = null === $sport ? 0 : $sport->getProducts();
+	$form->add('task', 'entity', array(
+		'class'       => 'AcmeDemoBundle:Product',
+		'empty_value' => '',
+		'choices' => $postions,
+		'property' => 'name',
+		'required'=>false,
+	));
+};
+$builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($formModifier) {
+	$form = $event->getForm();
+	// this would be your entity, i.e. SportMeetup
+	$data = $event->getData();
+	$sport = $data->getCategory();
+	$formModifier($form, $sport);
+});
+$builder->get('category')->addEventListener(
+	FormEvents::POST_SUBMIT, //表单提交事件；
+	function (FormEvent $event) use ($formModifier) {
+		// It's important here to fetch $event->getForm()->getData(), as
+		// $event->getData() will get you the client data (that is, the ID)
+		$sport = $event->getForm()->getData();
+		// since we've added the listener to the child, we'll have to pass on
+		// the parent to the callback functions!
+		$formModifier($event->getForm()->getParent(), $sport);
+	}
+);
+
+
+
+
+ 

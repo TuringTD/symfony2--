@@ -38,3 +38,8 @@ php app/console doctrine:generate:entities AcmeBlogBundle  //Õâ¸ö¾ÍÊÇÉú³ÉÊµÌåÎÊÌ
 Éú³ÉÖÆ¶¨ÊµÌå
 php app/console doctrine:mapping:import SiteAdminBundle xml --filter=Category
 
+php app/console assetic:dump ;
+php app/console assetic:install web ;
+
+
+
