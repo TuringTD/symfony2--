@@ -1,0 +1,208 @@
+安全分为两步；认证，权限
+一. 认证
+1，基本的http认证
+# app/config/security.yml
+security:
+    firewalls:
+        secured_area:
+            pattern:   ^/ #匹配url 
+            anonymous: ~ #允许匿名用户
+            http_basic:
+                realm: "Secured Demo Area" #弹出框的提示信息
+    access_control: #访问控制
+        - { path: ^/admin/, roles: ROLE_ADMIN } #以admin开头的路由 需要有ROLE_ADMIN角色
+        # Include the following line to also secure the /admin path itself
+        # - { path: ^/admin$, roles: ROLE_ADMIN }
+    providers:
+        in_memory:
+            memory:
+                users:
+                    ryan:  { password: ryanpass, roles: 'ROLE_USER' }
+                    admin: { password: kitten, roles: 'ROLE_ADMIN' }
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+
+2，传统登陆表单
+# app/config/security.yml
+security:
+    firewalls:
+        secured_area:
+            pattern:   ^/
+            anonymous: ~
+            form_login:
+                login_path: login #路由名称
+                check_path: login_check
+				
+
+编写验证登陆信息控制器
+// src/Acme/SecurityBundle/Controller/SecurityController.php;
+namespace Acme\SecurityBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\SecurityContextInterface;
+
+class SecurityController extends Controller
+{
+    public function loginAction(Request $request)
+    {
+        $session = $request->getSession();
+
+        // get the login error if there is one
+        if ($request->attributes->has(SecurityContextInterface::AUTHENTICATION_ERROR)) {
+            $error = $request->attributes->get(
+                SecurityContextInterface::AUTHENTICATION_ERROR
+            );
+        } elseif (null !== $session && $session->has(SecurityContextInterface::AUTHENTICATION_ERROR)) {
+            $error = $session->get(SecurityContextInterface::AUTHENTICATION_ERROR);
+            $session->remove(SecurityContextInterface::AUTHENTICATION_ERROR);
+        } else {
+            $error = '';
+        }
+
+        // last username entered by the user
+        $lastUsername = (null === $session) ? '' : $session->get(SecurityContextInterface::LAST_USERNAME);
+
+        return $this->render(
+            'AcmeSecurityBundle:Security:login.html.twig',
+            array(
+                // last username entered by the user
+                'last_username' => $lastUsername,
+                'error'         => $error,
+            )
+        );
+    }
+}
+登陆的模板
+{# src/Acme/SecurityBundle/Resources/views/Security/login.html.twig #}
+{% if error %}
+    <div>{{ error.message }}</div>
+{% endif %}
+<form action="{{ path('login_check') }}" method="post">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="_username" value="{{ last_username }}" />
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="_password" />
+
+    {#
+        If you want to control the URL the user
+        is redirected to on success (more details below)
+        <input type="hidden" name="_target_path" value="/account" />
+    #}
+
+    <button type="submit">login</button>
+</form>	
+
+避免的陷阱
+1确保login,login_check路由存在
+2,确保login路由是安全（不需要被验证）,否则死循环
+	错误的
+    access_control:
+        - { path: ^/, roles: ROLE_ADMIN } 
+	正确的
+	access_control:
+    - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/, roles: ROLE_ADMIN }
+  如果网站不允许匿名账户登陆，则需要配置一个防火墙允许访问login页面
+  firewalls:
+    login_firewall:
+        pattern:   ^/login$
+        anonymous: ~
+3，确保check_login在防火墙内；
+
+二,权限
+一般是URL 指定权限
+匹配选项(access_control)
+path 路由(使用正则)
+ip or ips (限制IP)
+host (限制主机)
+methods (限制请求方法)
+
+security:
+    # ...
+    access_control:
+        - { path: ^/esi, roles: IS_AUTHENTICATED_ANONYMOUSLY, ips: [127.0.0.1, ::1] }
+        - { path: ^/esi, roles: ROLE_NO_ACCESS }
+		
+通过表达式
+# app/config/security.yml
+security:
+    # ...
+    access_control:
+        -
+            path: ^/_internal/secure
+            allow_if: "'127.0.0.1' == request.getClientIp() or has_role('ROLE_ADMIN')"
+request 请求对象；
+
+强制通道（http,https）
+# app/config/security.yml
+security:
+    # ...
+    access_control:
+        - { path: ^/cart/checkout, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }		
+在控制器中控制
+public function helloAction($name)
+{
+    if (false === $this->get('security.context')->isGranted('ROLE_ADMIN')) {
+        throw $this->createAccessDeniedException('Unable to access this page!');
+    }
+    // ...
+}
+
+提供用户
+#    providers:
+##        in_memory:
+##            memory: #存在内存中
+##                users:
+##                    user:  { password: userpass, roles: [ 'ROLE_USER' ] }
+##                    admin: { password: adminpass, roles: [ 'ROLE_ADMIN' ] }
+#         my_entity_providers:
+#            entity: #从数据库中去
+#                class: AcmeDemoBundle:Users #Users需要实现Userinterface接口
+
+编码用户密码
+security:
+    # ...
+    providers:
+        in_memory:
+            memory:
+                users:
+                    ryan:
+                        password: $2a$12$w/aHvnC/XNeDVrrl65b3dept8QcKqpADxUlbraVXXsC03Jam5hvoO
+                        roles: 'ROLE_USER'
+                    admin:
+                        password: $2a$12$HmOsqRDJK0HuMDQ5Fb2.AOLMQHyNHGD0seyjU3lEVusjT72QQEIpW
+                        roles: 'ROLE_ADMIN'
+
+    encoders:
+        Symfony\Component\Security\Core\User\User:
+            algorithm: bcrypt
+            cost: 12
+
+在控制器中加密密码
+$factory = $this->get('security.encoder_factory');
+$user = new Acme\UserBundle\Entity\User();
+
+$encoder = $factory->getEncoder($user);
+$password = $encoder->encodePassword('ryanpass', $user->getSalt());
+$user->setPassword($password);			
+	
+无状态 认证（不存信息到cookie）
+security:
+    firewalls:
+        main:
+            http_basic: ~
+            stateless:  true
+
+比较字符串
+use Symfony\Component\Security\Core\Util\StringUtils;
+// is password1 equals to password2?
+$bool = StringUtils::equals($password1, $password2);
+
+生成一个安全的随机数；
+use Symfony\Component\Security\Core\Util\SecureRandom;
+
+$generator = new SecureRandom();
+$random = $generator->nextBytes(10);
+
