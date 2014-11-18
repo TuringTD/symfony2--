@@ -41,5 +41,12 @@ php app/console doctrine:mapping:import SiteAdminBundle xml --filter=Category
 php app/console assetic:dump ;
 php app/console assetic:install web ;
 
+查看系统中有哪些服务
+php app/console container:debug
+
+检测twig模板语法
+ php app/console twig:lint app/Resources/views/Article/recentList.html.twig 对某一个文件
+ php app/console twig:lint app/Resources/views //对某一个文件夹
+ 
 
 

@@ -1,0 +1,184 @@
+数据库配置
+# app/config/parameters.yml
+parameters:
+    database_driver:    pdo_mysql
+    database_host:      localhost
+    database_name:      test_project
+    database_user:      root
+    database_password:  password
+	
+# app/config/config.yml
+doctrine:
+    dbal:
+        driver:   "%database_driver%"
+        host:     "%database_host%"
+        dbname:   "%database_name%"
+        user:     "%database_user%"
+        password: "%database_password%"	
+	
+创建一个实体类
+// src/Acme/StoreBundle/Entity/Product.php
+namespace Acme\StoreBundle\Entity;
+
+class Product
+{
+    protected $name;
+
+    protected $price;
+
+    protected $description;
+}
+也可以通过指令来创建 (php app/console doctrine:generate:entity);
+
+通过指令给每个字段生成 get set 方法
+php app/console doctrine:generate:entities Acme/StoreBundle/Entity/Product
+
+根据实体类 创建数据表
+php app/console doctrine:schema:update --force
+
+持久化对象到数据库
+use Acme\StoreBundle\Entity\Product;
+use Symfony\Component\HttpFoundation\Response;
+
+public function createAction()
+{
+    $product = new Product(); //实体类
+    $product->setName('A Foo Bar'); //通过set方法设置值
+    $product->setPrice('19.99');
+    $product->setDescription('Lorem ipsum dolor');
+    $em = $this->getDoctrine()->getManager();
+    $em->persist($product); //持久化到数据库
+    $em->flush(); //最终需要flush 才有效;
+    return new Response('Created product id '.$product->getId());//返回结果；
+}
+
+从数据库中获取数据
+public function showAction($id)
+{
+    $product = $this->getDoctrine()
+        ->getRepository('AcmeStoreBundle:Product')
+        ->find($id); //获取实体类；
+	//如果不存在数据抛出异常
+    if (!$product) {
+        throw $this->createNotFoundException(
+            'No product found for id '.$id
+        );
+    }
+}
+
+// 根据主键来查询；
+$product = $repository->find($id);
+
+//根据字段来查询 一条数据
+$product = $repository->findOneById($id);
+$product = $repository->findOneByName('foo');
+
+// 查询所有
+$products = $repository->findAll();
+
+// 根据字段来查询 一组数据
+$products = $repository->findByPrice(19.99);
+
+可以根据 多个条件参数
+$product = $repository->findOneBy(
+    array('name' => 'foo', 'price' => 19.99)
+);
+$products = $repository->findBy(
+    array('name' => 'foo'),
+    array('price' => 'ASC')
+);
+
+更新数据
+public function updateAction($id)
+{
+    $em = $this->getDoctrine()->getManager();
+    $product = $em->getRepository('AcmeStoreBundle:Product')->find($id);
+
+    if (!$product) {
+        throw $this->createNotFoundException(
+            'No product found for id '.$id
+        );
+    }
+
+    $product->setName('New product name!'); //更新值；
+    $em->flush(); //直接flush
+
+    return $this->redirect($this->generateUrl('homepage'));
+}
+
+删除对象
+$em->remove($product);
+$em->flush();
+
+QueryBuilder 的使用
+$repository = $this->getDoctrine()
+    ->getRepository('AcmeStoreBundle:Product');
+
+$query = $repository->createQueryBuilder('p')
+    ->where('p.price > :price')
+    ->setParameter('price', '19.99')
+    ->orderBy('p.price', 'ASC')
+    ->getQuery();
+
+$products = $query->getResult();
+
+DQL 的使用
+$em = $this->getDoctrine()->getManager();
+$query = $em->createQuery('p')                                                                    (
+    'SELECT p
+    FROM AcmeStoreBundle:Product p
+    WHERE p.price > :price
+    ORDER BY p.price ASC'
+)->setParameter('price', '19.99');
+
+$products = $query->getResult();
+
+自定义Repository 类：
+yml格式的
+# src/Acme/StoreBundle/Resources/config/doctrine/Product.orm.yml
+Acme\StoreBundle\Entity\Product:
+    type: entity
+    repositoryClass: Acme\StoreBundle\Entity\ProductRepository
+xml格式的
+<!-- src/Acme/StoreBundle/Resources/config/doctrine/Product.orm.xml -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+        http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity
+        name="Acme\StoreBundle\Entity\Product"
+        repository-class="Acme\StoreBundle\Entity\ProductRepository">
+
+        <!-- ... -->
+    </entity>
+</doctrine-mapping>	
+
+在执行生成命令
+php app/console doctrine:generate:entities Acme
+
+就可以在自定义的Repository类写一些复杂的数据库操作；提供给控制器调用；
+// src/Acme/StoreBundle/Entity/ProductRepository.php
+namespace Acme\StoreBundle\Entity;
+
+use Doctrine\ORM\EntityRepository;
+
+class ProductRepository extends EntityRepository
+{
+    public function findAllOrderedByName()
+    {
+        return $this->getEntityManager()
+            ->createQuery(
+                'SELECT p FROM AcmeStoreBundle:Product p ORDER BY p.name ASC'
+            )
+            ->getResult();
+    }
+}
+控制器调用
+$em = $this->getDoctrine()->getManager();
+$products = $em->getRepository('AcmeStoreBundle:Product')
+            ->findAllOrderedByName();
+
+
+	
