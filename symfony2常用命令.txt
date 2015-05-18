@@ -8,11 +8,12 @@
  php app/console doctrine:generate:entity
  
  //ÔÚÊµÌåÖĞÉú³ÉgetName ºÍ setName ·½·¨£»
- php app/console doctrine:generate:entities Acme/StoreBundle/Entity/Product
+ php app/console doctrine:generate:entities Acme/StoreBundle/Entity/Product --path=src
  php app/console doctrine:generate:entities AcmeStoreBundle  //Éú³ÉËùÓĞÊµÌå
  
  //¸ù¾İÊµÌå°ÑÊı¾İ¸üĞÂµ½Êı¾İ¿â;×Ô¶¯´´½¨±í£»
  php app/console doctrine:schema:update --force
+ php app/console doctrine:mapping:convert xml ./src/App/MyBundle/Resources/config/doctrine/metadata/orm --from-database --force
  
 //¸ù¾İÒÑ¾­ÓĞµÄ±íÉú³ÉÊµÌå£»
  php app/console doctrine:mapping:import --force AcmeDemoBundle xml
@@ -39,7 +40,9 @@ php app/console doctrine:generate:entities AcmeBlogBundle  //Õâ¸ö¾ÍÊÇÉú³ÉÊµÌåÎÊÌ
 php app/console doctrine:mapping:import SiteAdminBundle xml --filter=Category
 
 php app/console assetic:dump ;
-php app/console assetic:install web ;
+php app/console assets:install web ;
+
+
 
 ²é¿´ÏµÍ³ÖĞÓĞÄÄĞ©·şÎñ
 php app/console container:debug
