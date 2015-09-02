@@ -133,4 +133,105 @@ symfony内置了好多表单类型,在不久我门将要讨讨论([内置表单�
 
 ##处理表单提交
 
-表单的第二份工作转化用户提交的数据设置到一个对象中的属性; 让这种情况发生
+表单的第二份工作转化用户提交的数据设置到一个对象中的属性; 为了实现这一点, 用户提交的数据必须要写入到表单中,在你的控制器中增加下面的代码
+
+    use Symfony\Component\HttpFoundation\Request;
+
+    public function newAction(Request $request)
+    {
+        // just setup a fresh $task object (remove the dummy data)
+        $task = new Task();
+
+        $form = $this->createFormBuilder($task)
+            ->add('task', 'text')
+            ->add('dueDate', 'date')
+            ->add('save', 'submit', array('label' => 'Create Task'))
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isValid()) {
+            // perform some action, such as saving the task to the database
+
+            return $this->redirectToRoute('task_success');
+        }
+
+        // ...
+    }
+
+这个控制器遵循了一个公共的处理表单模式,有三个可能的路径
+
+1. 当浏览器开始加载一个页面,简单的创建了和渲染一个表单. handleRequest()方法能够识别到表单是没有提交的.如果这个
+表单没有提交isValid()方法是返回false的;
+
+2. 当这个用户提交了表单,handleRequest()方法识别到且立即把提交的数据写入到$task对象中的task和dueData属性中
+当这个对象经过验证.如果是无效(验证在下一节讨论),isValid()再次返回false,所以这个表单再次和验证错误信息一起渲染;
+
+  小提示:
+      >你也能够使用isSubmitted()方法来检查表单是否提交,不管提交的数据是否有效
+
+3. 当这个用户提交表单数据是有效的,这个提交数据再次写到表单中,但是这次isValid()方法返回true.现在你有机会
+在这个用户重定向一些页面(如:"感谢"或"成功"页面)前使用$task对象执行一些动作(如：持久化到数据库)
+
+ 小提示:
+     >表单提交提交成功重定向;防止这个用户点击浏览器的刷新按钮重复提交数据
+
+ 如果你想要控制表单何时提交或数据传递给它,你能够使用那个submit()方法,在cookboook中阅读更多的信息
+
+
+
+##多个按钮提交表单
+
+当你的表单包含多个提交按钮,在你的控制器中你将想要检测点击的按钮执行合适的程序,要做到这一点,在你的表单第二个按钮
+加上标题"保存和添加"
+
+    $form = $this->createFormBuilder($task)
+        ->add('task', 'text')
+        ->add('dueDate', 'date')
+        ->add('save', 'submit', array('label' => 'Create Task'))
+        ->add('saveAndAdd', 'submit', array('label' => 'Save and Add'))
+        ->getForm();
+
+在你的控制器中,使用按钮的 isClicked()方法来检测"保存和添加"按钮是否点击;
+
+    if ($form->isValid()) {
+        // 执行一些动作，比如保存task到数据库
+
+        $nextAction = $form->get('saveAndAdd')->isClicked()
+            ? 'task_new'
+            : 'task_success';
+
+        return $this->redirectToRoute($nextAction);
+    }
+
+##表单验证
+
+在前面章节部分，你学习了如何能够表单的数据是否有效， 在symfony中,验证是应用于底层对象(如:Task),换句话来说
+这个问题不是表单是否有效,但验证$task对象是否有效是基于表单提交后的它，调用$form->isValid()方法是验证$task对象数据是否
+有效的快捷方法
+
+验证时通过给一个类添加一些规则(称呼为约束)来完成的,看到这,添加验证约束task字段不能为空和dueDate字段不能为空且必须
+为有效的DateTime对象
+
+    这里只列出yml格式；有四种方式可用；具体查看官网
+    # AppBundle/Resources/config/validation.yml
+    AppBundle\Entity\Task:
+        properties:
+            task:
+                - NotBlank: ~
+            dueDate:
+                - NotBlank: ~
+                - Type: \DateTime
+
+
+这是他!如果你重新提交无效数据, 你将看到相应的错误信息打印到表单中
+
+附注:
+
+  >html5 验证
+  >自html5出来,许多浏览器能够自然的在客户端执行一些验证.通常通过给字段渲染一个required属性来激活验证,对于
+  >支持html5的浏览器,如果用户尝试提交一个空的数据则浏览器将要显示一个天然（内置的）的信息
+
+  在生成表单的时候可以利用这些特征添加一些html属性来触发验证.客户端这边验证，然而,能够通过给form标签或formnovalidate 添加novalidate 属性来
+  禁用
+
