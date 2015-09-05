@@ -233,5 +233,688 @@ symfony内置了好多表单类型,在不久我门将要讨讨论([内置表单�
   >支持html5的浏览器,如果用户尝试提交一个空的数据则浏览器将要显示一个天然（内置的）的信息
 
   在生成表单的时候可以利用这些特征添加一些html属性来触发验证.客户端这边验证，然而,能够通过给form标签或formnovalidate 添加novalidate 属性来
-  禁用
+  禁用,这个通常用于当你想要测试服务端验证的时候使用，但是这可能被浏览器阻止，例如,提交一个空白字段.
+
+  `{{ form(form, {'attr': {'novalidate': 'novalidate'}}) }}`
+
+验证是symfony非常强大的特征,有专门章节来讲解
+
+
+##验证组
+
+如果你的对象验证需要利用验证组，你将需要指定你的表单所使用的验证组
+
+    $form = $this->createFormBuilder($users, array(
+        'validation_groups' => array('registration'),
+    ))->add(...)
+
+如果你使用表单类(好的实践方式),你将需要添加下面的configureOptions方面
+
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'validation_groups' => array('registration'),
+        ));
+    }
+
+上面两种情况,仅registration 验证组将要用于潜在对象的验证
+
+##禁用验证
+
+有时候他用于完全抑制一个表单的验证，这种情况你可以设置validation_groups 选项为false;
+
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'validation_groups' => false,
+        ));
+    }
+
+注意当你做了这些的事情以后,这个表单任然会做一些基本完整性的验证,例如当你上传一个非常大的文件或提交一个不存在的字段,如果想要
+抑制验证,你可以使用表单 POST_SUBMIT 事件.
+
+##根据提交的数据决定验证组
+
+如果你有时候需要根据先进的逻辑决定验证组(如:基于提交的数据),你能够设置validation_groups 选项为一个数组回调
+
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    // ...
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'validation_groups' => array(
+                'AppBundle\Entity\Client',
+                'determineValidationGroups',
+            ),
+        ));
+    }
+
+当表单提交后将要调用Client类中determineValidationGroups静态方法,但在执行验证前，这个表单对象通过一个参数给你这个方法(看下面这个例子)
+你也可以使用闭包来完成
+    use AppBundle\Entity\Client;
+    use Symfony\Component\Form\FormInterface;
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    // ...
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'validation_groups' => function (FormInterface $form) {
+                $data = $form->getData();
+
+                if (Client::TYPE_PERSON == $data->getType()) {
+                    return array('person');
+                }
+
+                return array('company');
+            },
+        ));
+    }
+
+使用这个validation_groups 选项覆盖默认验证组,如果你想要同时使用默认约束来验证实体，需要按照下面来调整选项
+
+    use AppBundle\Entity\Client;
+    use Symfony\Component\Form\FormInterface;
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    // ...
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'validation_groups' => function (FormInterface $form) {
+                $data = $form->getData();
+
+                if (Client::TYPE_PERSON == $data->getType()) {
+                    return array('Default', 'person');
+                }
+
+                return array('Default', 'company');
+            },
+        ));
+    }
+
+你能够在validation groups章节中找到有关验证组和默认约束工作相关的更过的信息;
+
+##根据点击按钮决定验证组
+
+当你表单有多个提交按钮,你能够根据用户点击那个按钮来改变表单的验证组，例如,思考一下有一个向导表单 让你点击下一步前进,点击上一步
+返回，还假设当点击上一步返回需要保存数据但是不需要验证。
+
+首先你需要给表单增加两个按钮
+
+    $form = $this->createFormBuilder($task)
+        // ...
+        ->add('nextStep', 'submit')
+        ->add('previousStep', 'submit')
+        ->getForm();
+
+其次，我们需要为上一步按钮配置运行指定验证组，在这个例子中我们想要抑制验证,所以我们设置validation_groups选项为false;
+
+    $form = $this->createFormBuilder($task)
+        // ...
+        ->add('previousStep', 'submit', array(
+            'validation_groups' => false,
+        ))
+        ->getForm();
+
+现在这个表单将要跳过验证约束，但是他任然会验证一些基本完整性的约束，比如检查上传文件是否太大或者你尝试在一个number字段中提交
+文本数据
+
+##建立字段类型
+
+symfony拥有大量标准的字段类型组，覆盖了我们常遇到的表单字段和数据类型
+
+
+各个字段的基本使用请查看文档，这里只是列出来
+
+###文本字段
+
+ >text, textarea, email, integer, money, number, password, percent, search, url
+
+###选择字段类型
+
+ >choice, entity, country, language, locale, timezone, currency
+
+###日期和时间类型
+
+ >date, datetime, time, birthday
+
+###其它字段
+
+ >checkbox, file, radio
+
+###字段组
+
+ >collection, repeated
+
+###隐藏字段
+
+ >hidden
+
+###按钮
+
+ >button, reset, submit
+
+###基本字段
+
+ >form
+
+你也能够自己创建字段类型,这个主题将要在cookbook中的"[如和创建自定义字段](http://symfony.com/doc/current/cookbook/form/create_custom_field_type.html)"章节中讨论
+
+
+##字段类型选项
+
+每个字段都有很多选项来配置它,例如,这个dueDate字段目前是渲染说三个下拉框,然而,date 字段能够配置出渲染单个文本框（用户在输入框中输入日期将作为字符串）
+
+ `->add('dueDate', 'date', array('widget' => 'single_text'))`
+
+每个字段类型都有很多不同的选项传递给它，这些特定的字段类型和细节可以在每种类型的文档中找到;
+
+  附注:
+  require选项
+
+  require选项是一个常用选项,它应用于任何字段,默认该选项为true,这意味着如果字段留空,支持html5浏览器将应用客户端验证，如果你不想要
+  这种行为,也可以设置require属性为false或禁用html5验证
+
+  还需要注意的是当你设置require为true，不会导致服务端验证.换句话来说.如果提交一个空白字段值(也许是旧的浏览器或者web service)
+  它将要被接受成一个有效值除非你使用symfony NotBlank或NotNull验证约束
+
+  换句话说.这reuqire选项是"漂亮".但是在服务端也会是需要验证
+
+  label选项
+
+  表单字段的label可以通过设置label选项,他能应用于任何字段
+
+    ->add('dueDate', 'date', array(
+        'widget' => 'single_text',
+        'label'  => 'Due Date',
+    ))
+
+   你一个字段label也可以在表单渲染模板中设置,看下面,如果你不需要label关联你的字段,你可以通过设置它的值为false来禁用它
+
+##字段类型猜测
+
+现在你已经给Task类添加了验证,symfony已经知道了你字段的一点信息,如果你允许它,symfony能够猜测你字段的类型且为你设定,
+这个例子中,symfony能够从验证规则猜测 task字段为普通text字段和dueDate字段为date类型
+
+    public function newAction()
+    {
+        $task = new Task();
+
+        $form = $this->createFormBuilder($task)
+            ->add('task')
+            ->add('dueDate', null, array('widget' => 'single_text'))
+            ->add('save', 'submit')
+            ->getForm();
+    }
+
+
+当你忽略add()方法的第二个参数这"猜测"就被激活(或者通过设置为null),如果你通过一个数组作为第三个参数(上面的dueDate字段),这些选项
+也应用于字段猜测
+
+注释:
+> 如果你表单使用了一个指定的验证组,当猜测你的字段类型，这字段猜测会考虑所有验证约束(包括验证组中没有用到的验证)。
+
+
+###字段类型选项猜测
+
+除了猜测字段类型,symfony也能够尝试猜测一个字段大部分选项的正确值
+
+小提示:
+
+>当这些选项设置了,这字段将要渲染专门的hml属性，提供一些html5客户端验证，然而，他不等同于生成了服务端约束(如果 Asset\Length)
+虽然你将需要手动增加一些约束，从这些信息也能够猜测字段类型选项
+
+required
+
+根据验证规则(如NotBlank或NotNull)能够猜测required选项或Doctrine的metadata(这个字段 nullable),这个是非常常用，将自动匹配
+验证规则作为客户端验证
+
+max_length
+
+如果这些字段是一些文本字段,从这些字段的验证规则(如果使用了Length或Range)能够猜测出max_length选项或
+Doctrine metaData（通过这个字段的Length）
+
+注意:
+>如果你使用symfony字段猜测（通过忽略add()第二个参数或设为null）这些字段选项仅仅是猜测
+
+如果你想要改变一个猜测字段选项的值,你能够在字段选项数组中覆盖这个选项；
+
+
+    ->add('task', null, array('attr' => array('maxlength' => 4)))
+
+
+##在模板中渲染表单
+
+迄今为止,你所看到的是只是通过一行代码来渲染真个表单的,当然,你将要使用非常灵活的方式去渲染
+
+    {# app/Resources/views/default/new.html.twig #}
+    {{ form_start(form) }}
+        {{ form_errors(form) }}
+
+        {{ form_row(form.task) }}
+        {{ form_row(form.dueDate) }}
+    {{ form_end(form) }}
+
+你已经知道了from_star和from_end的功能,但是其他的功能你知道吗?
+
+`form_errors(form)`
+
+将任何错误呈现给整个表单（在每个字段中显示字段特定错误）
+
+`form_row(form.dueDate)`
+
+渲染label,任何错误和html表单小物件在一个特定的元素里面,默认情况下是一个div元素
+
+大多数工作是由from_row来完成的，渲染label,错误和表单相关元素,每个字段默认渲染是在一个div标签里，在表单主题章节中你将要学习到
+from_row能够在不同层面上自定义输出
+
+小提示:
+> 你能够通过`form.vars.value`来访问当前的表单数据
+
+    {{ form.vars.value.task }}
+
+###手动渲染每个字段
+
+frow_row帮助方法是非常棒的因为你能够非常快的渲染你表单的每一个字段(且每一行的标记都可以自定义),但是由于生活并不总是那么简单
+你也能够手动完全渲染每一个字段,当你使用from_row最终的产品和下面是一样的;
+
+    {{ form_start(form) }}
+        {{ form_errors(form) }}
+
+        <div>
+            {{ form_label(form.task) }}
+            {{ form_errors(form.task) }}
+            {{ form_widget(form.task) }}
+        </div>
+
+        <div>
+            {{ form_label(form.dueDate) }}
+            {{ form_errors(form.dueDate) }}
+            {{ form_widget(form.dueDate) }}
+        </div>
+
+        <div>
+            {{ form_widget(form.save) }}
+        </div>
+
+    {{ form_end(form) }}
+
+如果自动生成的label并不十分正确你能够明确的指定它
+
+    {{ form_label(form.task, 'Task Description') }}
+
+一些字段类型有一些额外的渲染选项传递给小物件,这些选项在每个类型的文档中有说明,但是公共的选项attr,允许你修改表单元素的
+属性,以下将添加task_field样式类给文本字段渲染
+
+    {{ form_widget(form.task, {'attr': {'class': 'task_field'}}) }}
+
+如果你需要通过手动渲染字段然后访问每个字段独立的值如 id,label,下面的例子是获取id
+
+    {{ form.task.vars.id }}
+
+获取值使用表单字段的名称属性你必须使用全名
+
+    {{ form.task.vars.full_name }}
+
+
+###twig模板函数参考
+
+如果你使用twig,完整的引用表单渲染方法可以在[参考手册](http://symfony.com/doc/current/reference/forms/twig_reference.html)中找到
+阅读这一切有关助手和每一个可用的选项
+
+
+##改变表单的提交方法
+
+到目前为止,from_start()助手已经渲染了表单的开始标签和我们假想表单提交POST请求到一样的URL,有时候你想要改变这些参数
+你可以使用几个不同的方式去做,如果你是在你的控制器中创建的表单,你能够使用setAction()和setMethod()方法
+
+    $form = $this->createFormBuilder($task)
+        ->setAction($this->generateUrl('target_route'))
+        ->setMethod('GET')
+        ->add('task', 'text')
+        ->add('dueDate', 'date')
+        ->add('save', 'submit')
+        ->getForm();
+
+注释:
+> 这个实例是假设你已经创建了一个名称为target_route的路由在控制器中处理表单
+
+在表单类中,你将学习到如何将构建表单的代码移动到一个独立的类中,当在控制器中使用一个外部表单类,你能够通过action和method作为表单
+的选项
+
+    $form = $this->createForm(new TaskType(), $task, array(
+        'action' => $this->generateUrl('target_route'),
+        'method' => 'GET',
+    ));
+
+最后,你能够通过form()或form_start()助手在模板中覆盖action和method
+
+    {{ form_start(form, {'action': path('target_route'), 'method': 'GET'}) }}
+
+注释:
+> 如果你的表单方法不是GET和POST且不是PUT,PATCH 或 DELETE,symfony将要插入一个隐藏的名称为_method的字段来存储这个方法,这个
+表单提交将是一个普通的POST请求,但symfony的路由是有能力检查_method参数和将要解释它作为一个 PUT, PATCH 或 DELETE的请求
+阅读cookbook中"如何使用HTTP方法除了GET和POST之外的方法"来了解更过的信息
+
+
+##创建表单类
+
+正如你所看到的,一个表单的创建和使用都是直接在控制器中,然而,一个更好的实践方式建立一个单独的PHP类来分离,这样你的应用程序中任何
+地方能够重复利用,创建一个新的类来安置建立task表单的逻辑
+
+
+    // src/AppBundle/Form/Type/TaskType.php
+    namespace AppBundle\Form\Type;
+
+    use Symfony\Component\Form\AbstractType;
+    use Symfony\Component\Form\FormBuilderInterface;
+
+    class TaskType extends AbstractType
+    {
+        public function buildForm(FormBuilderInterface $builder, array $options)
+        {
+            $builder
+                ->add('task')
+                ->add('dueDate', null, array('widget' => 'single_text'))
+                ->add('save', 'submit')
+            ;
+        }
+
+        public function getName()
+        {
+            return 'task';
+        }
+    }
+
+注意:
+>getName()方法返回是一个标识符,这种表单类型,这个标识符在你应用中必须唯一,除非你想要覆盖一个内置的类型,在你的应用程序
+中它应该不同于默认的symfony类型和你安装的第三方bundle中的任何定义的类型,考虑给你的类型加一app_前缀避免标识碰撞
+
+这个新类中包含了所有的创建任务表单的所需的用法,在控制器中能够快速的建立一个表单对象
+
+    // src/AppBundle/Controller/DefaultController.php
+
+    // add this new use statement at the top of the class
+    use AppBundle\Form\Type\TaskType;
+
+    public function newAction()
+    {
+        $task = ...;
+        $form = $this->createForm(new TaskType(), $task);
+
+        // ...
+    }
+
+把这个表单的逻辑放置到自己的类中这意味着在你的项目中任何地方你能够很简单的重复利用,这是最好的创建表单方式,但最终的选择取决于你
+
+附注:
+
+####设置data_class
+
+每个表单需要知道潜在数据类的名称(如 AppBundle\Entity\Task),通常是通过传递给createForm方法的第二参数的对象去猜测(如$task)
+随后,当你开始嵌入表单,这将不再足够,所以,虽然并不总是必要,给你表单类型类增加明确指定的data_class选项值他通用是一个好的主意
+
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults(array(
+            'data_class' => 'AppBundle\Entity\Task',
+        ));
+    }
+
+当给表单映射一个对象时,他所有的字段都将要映射,任何字段在表单映射对象中不存在将要引起一个异常的抛出
+
+在你表单需要额外字段的情况下(如:有一个是否同意条款的checkbox框)他将不会映射到潜在对象,你需要设置mapped选项为false
+
+    use Symfony\Component\Form\FormBuilderInterface;
+
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder
+            ->add('task')
+            ->add('dueDate', null, array('mapped' => false))
+            ->add('save', 'submit')
+        ;
+    }
+
+另外,任何表单的字段在提交的数据中不包括将要明确的设置为null
+
+在控制器中能够访问字段的值
+
+    $form->get('dueDate')->getData();
+
+此外,未映射的字段数据也能够直接修改
+
+    $form->get('dueDate')->setData(new \DateTime());
+
+###定义表单为服务
+
+定义的表单类型为一个服务是一种非常好的实践方式且在你应用程序中使用它真的非常简单
+
+服务和服务容器的处理将要在这本书中稍后讲解,阅读那章节后这些事情将更清晰
+
+    # src/AppBundle/Resources/config/services.yml
+    services:
+        app.form.type.task:
+            class: AppBundle\Form\Type\TaskType
+            tags:
+                - { name: form.type, alias: task }
+
+就是它！现在你可以在控制器中使用它
+
+    // src/AppBundle/Controller/DefaultController.php
+     // ...
+
+     public function newAction()
+     {
+         $task = ...;
+         $form = $this->createForm('task', $task);
+
+         // ...
+     }
+
+甚至在其它的表单中以内部表单类型来使用
+
+    // src/AppBundle/Form/Type/ListType.php
+    // ...
+
+    class ListType extends AbstractType
+    {
+        public function buildForm(FormBuilderInterface $builder, array $options)
+        {
+            // ...
+
+            $builder->add('someTask', 'task');
+        }
+    }
+
+阅读"创建你字段类型作为服务"了解更多信息
+
+##表单和Doctrine
+
+一个表单的目的是从一个对象(如 Task)数据转化到html表单和当用户提交表单后又转化成原对象,因此,持久化Task数据到数据库主题和
+表单主题完全不相关,但是你配置了task类通过doctrine来持久化(例如你给他增加metadata映射),当表单是有效,能够完成提交后然后
+持久化
+
+    if ($form->isValid()) {
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($task);
+        $em->flush();
+
+        return $this->redirectToRoute('task_success');
+    }
+
+如果,处于某种原因,你不能访问你的原始$task对象,你能从表单获取它
+
+    $task = $form->getData();
+
+更多的信息产看doctrine orm 相关章节
+
+当表单提交后关键的事是理解它,提交的数据会立即转化成潜在对象,如果你想要持久化数据,你只需要持久化对象本身(已经包含提交后的数据)
+
+##嵌入表单
+
+通常你创建一个表单会从多个不同对象中包含字段,例如,一个注册表单也许包含数据属于一个user对象以及多个address对象,幸运的是
+在表单组件中这是非常简单和自然
+
+###嵌入单个对象
+
+假想一下每个Task属于一个简单Category对象,首先,当然,创建一个Category对象
+
+    // src/AppBundle/Entity/Category.php
+    namespace AppBundle\Entity;
+
+    use Symfony\Component\Validator\Constraints as Assert;
+
+    class Category
+    {
+        /**
+         * @Assert\NotBlank()
+         */
+        public $name;
+    }
+
+其次在Task类中增加一个新的category属性
+
+    class Task
+    {
+        // ...
+
+        /**
+         * @Assert\Type(type="AppBundle\Entity\Category")
+         * @Assert\Valid()
+         */
+        protected $category;
+
+        // ...
+
+        public function getCategory()
+        {
+            return $this->category;
+        }
+
+        public function setCategory(Category $category = null)
+        {
+            $this->category = $category;
+        }
+    }
+
+小提示:
+>已经给category属性添加了Vaild约束,级联验证相应实体,如果你忽略了这约束,子实体将不会验证
+
+现在你的应用程序已经更新了以及反映新的需求,创建一个表单,这个category对象能够由用户来修改
+
+    // src/AppBundle/Form/Type/CategoryType.php
+    namespace AppBundle\Form\Type;
+
+    use Symfony\Component\Form\AbstractType;
+    use Symfony\Component\Form\FormBuilderInterface;
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    class CategoryType extends AbstractType
+    {
+        public function buildForm(FormBuilderInterface $builder, array $options)
+        {
+            $builder->add('name');
+        }
+
+        public function configureOptions(OptionsResolver $resolver)
+        {
+            $resolver->setDefaults(array(
+                'data_class' => 'AppBundle\Entity\Category',
+            ));
+        }
+
+        public function getName()
+        {
+            return 'category';
+        }
+    }
+
+最终的目的是允许一个Task的Category修改在正确的范围内,要实现这一点,给TaskType对象添加一个category字段,这个字段类型是
+一个CategoryType类的实例
+
+    use Symfony\Component\Form\FormBuilderInterface;
+
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        // ...
+
+        $builder->add('category', new CategoryType());
+    }
+
+属于CategoryType的字段现在可以与TaskType类渲染
+
+渲染category字段与Task对象原字段的方式一样
+
+    {# ... #}
+
+    <h3>Category</h3>
+    <div class="category">
+        {{ form_row(form.category.name) }}
+    </div>
+
+    {# ... #}
+
+当用户提交表单,提交的category字段数据将用于构造一个Category实例,然后设置在Task实例的category字段上
+
+Category实例可以通过`$task->getCategory()`来自然的访问且能持久化到数据库或随便使用它
+
+###嵌入一个集合表单
+
+在你的一个表单里你也可以嵌入一个集合表单(假想一下一个categor表单在多个Product子表单中),这是通过collection字段类型来完成
+
+更多的信息查看"如何嵌入一个集合表单"cookbokk章节和collection字段类型参考
+
+##表单主题
+
+表单的每一部分渲染都能够自定义,你可以自由的更改每个表单"row"渲染,改变用于渲染错误的标签甚至定制textarea标记如何渲染,
+没有什么不对且在不同的地方用不同的自定义
+
+symfony采用模板来渲染表单的每一部分比如label标签,input标签,错误信息和其他的一切
+
+在twig中,每个表单片是通过一个twig block来描述的,自定义任何部分的渲染,你只需要覆盖恰当的block;
+
+在php中,每个表单片段是通过一个独立模板文件来渲染,自定义任何部分的渲染,你需要创建一个新的文件覆盖已存在的模板文件
+
+要理解这是如何工作的,自定义form_row 片段且给每行div元素添加一个class属性,要做到这一点,创建一个新的模板文件来存取新的标记
+
+    {# app/Resources/views/form/fields.html.twig #}
+    {% block form_row %}
+    {% spaceless %}
+        <div class="form_row">
+            {{ form_label(form) }}
+            {{ form_errors(form) }}
+            {{ form_widget(form) }}
+        </div>
+    {% endspaceless %}
+    {% endblock form_row %}
+
+form_row片段是用于大多数字段通过form_row方法来渲染,告诉表单组件你将要使用上面新定义的form_row片段,
+在渲染表单的模板顶部增加以下面
+
+    {# app/Resources/views/default/new.html.twig #}
+    {% form_theme form 'form/fields.html.twig' %}
+
+    {# 如果你使用多个模板主题 #}
+    {% form_theme form 'form/fields.html.twig' 'form/fields2.html.twig' %}
+
+form_theme标签(在Twig里)导入定义片段的模板且当表单渲染的时候使用它们.换句话来说,当form_row在模板中被调用后,他将要使用
+自定的form_row block(而不是symfony内部的自带的form_row block)
+
+你自定义的主题不是覆盖所有的blocks,当渲染一个没有被自定义覆盖的block时,主题引擎将要返回到全局主题(定义在bundle级别)
+
+如果多个自定义主题提供了它们将要自上而下搜索到全局主题
+
+自定义表单任何部分,你只需要覆盖合适的片段,确切的知道哪些块或文件重写是一节的主题
+
+更广泛的信息,查看"如果自定义表单渲染"
+
 
