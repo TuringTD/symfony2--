@@ -915,6 +915,143 @@ form_theme标签(在Twig里)导入定义片段的模板且当表单渲染的时�
 
 自定义表单任何部分,你只需要覆盖合适的片段,确切的知道哪些块或文件重写是一节的主题
 
-更广泛的信息,查看"如果自定义表单渲染"
+更广泛的信息,查看"如何自定义表单渲染"
 
 
+##表单片段的命名
+
+在symfony中,表单的每部分渲染--html表单元素,错误,label,等等都定义在一个基本主题中,在twig中这是一个block的集合在PHP中这是一个集合模板文件
+
+在twig中,每个block需要定义在一个模板文件中(如 form_div_layout.html.twig),在这个文件里,你可以看到每个block需要渲染一个表单和每个默认的
+字段类型
+
+在php中,片段是独立的模板文件,默认是位于框架`Resources/views/Form`目录下
+
+每个片段的名称都遵循相同基本规则和分成两块,通过一个下划线来分离,看一下下面几个例子
+
+* form_row 用于通过form_row来渲染大部分字段
+* textarea_widget 用于通过form_widget 渲染一个textarea的字段类型
+* form_errors 用于为一个字段通过from_errors来渲染错误
+
+每个片段遵循同样的规则: type_part type部分对应渲染字段的类型(如textarea, checkbox, date等)而part部分对应渲染部分(如label, widget, errors等)
+默认一个表单这有四个可能的部分可能渲染
+
+| label | (如 form_label) | 渲染字段的label
+| widget | (如 form_widget) | 渲染字段的html描述
+| errors | (如 form_errors) | 渲染字段的错误
+| row | (如form_row) | 渲染字段整个行(label,widget,errors)
+
+附注:
+
+>这其实还有2个其他的部分 rows 和 reset 单你应该几乎不需要担心覆盖他们
+
+通过了解字段类型(如textarea)和你想要自定义部分(如widget),你只需要构造片段名称覆盖掉原来的(如textarea_widget)
+
+###模板片段继承
+
+在某些情况下,你想自定义一个不存在的片段,例如,在symfony提供的默认主题中不存在textarea_errors片段,所以如何渲染一个textarea字段类型的错误呢?
+
+这个回答是:通过form_errors 片段,当symfony渲染一个textarea类型的错误时,它看起来首先会去找textarea_errors片段在返回到form_errors,每个字段类型
+都有一个父类型(textare,text他们的父类型是form)且如果基本片段不存在symfony将会是用父类的片段
+
+所以，只需要覆盖textarea字段错误,复制form_errors片段重命名为textarea_errors 且 自定义它,如果覆盖所有字段的错误渲染,直接复制和自定义form_errors片段;
+
+小提示:
+
+>在每个字段类型的 "表单类型参考"文档中可查询到每个字段的父类是否有效
+
+###全局表单主题
+
+在上面的例子中,你使用form_theme助手(在twig中)导入自定表单片段来调整表单,你也可以告诉symfony导入自定表单从整个项目中
+
+####Twig
+
+在所有的模板中从早期创建的ields.html.twig模板中动包含自定义block,修改你的应用配置文件
+
+    # app/config/config.yml
+    twig:
+        form_themes:
+            - 'form/fields.html.twig'
+
+现在任何在 fields.html.twig 模板中定义的表单输出都应用于全局
+
+附注:
+
+#####在单个twig文件里自定义所有表单输出
+
+在twig中,你也可以自定义表单block在你需要自定义的模板文件里
+
+    {% extends 'base.html.twig' %}
+
+    {# import "_self" as the form theme #}
+    {% form_theme form _self %}
+
+    {# 制作自定义表单输出 #}
+    {% block form_row %}
+        {# custom field row output #}
+    {% endblock form_row %}
+
+    {% block content %}
+        {# ... #}
+
+        {{ form_row(form.task) }}
+    {% endblock %}
+
+`{% form_theme form _self %}`标签允许表单block直接使用在模板中定义的blok,使用这个方法快速的制作表单自定义输出将只需在一个模板里
+
+`{% form_theme form _self %}` 功能 只能 在当前模板是继承其他模板的时候管用.如果你的模板没有这样做,你必须把form_theme指向一个单独的文件
+
+####PHP
+
+在所有的模板中从早期创建的ields.html.twig模板中动包含自定义block,修改你的应用配置文件
+
+    # app/config/config.yml
+    framework:
+        templating:
+            form:
+                resources:
+                    - 'Form'
+    # ...
+
+现在任何在 fields.html.twig 模板中定义的表单输出都应用于全局
+
+###CRSF防护
+
+CSRF 或[伪造请求站点](http://en.wikipedia.org/wiki/Cross-site_request_forgery)是一个恶意的用户尝试让一个你的合法用户在不知情的情况下
+提交了一个你不应该提交的数据,幸运的是CSRF通过在你表里增加一个CSRF token 来阻止攻击
+
+好消息是,默认情况下syfmony自动嵌入和验证SRF tokens ,这意味着你不需要做任何事就可以利用CSRF来防护,实际上在这一节中所利用到的表单都使用了CSRF防护
+
+CSRF的工作原理是在你的表单增加了一个隐藏域，默认名称为_token,包含了一个只有你和你的用户知道的值,确保这是用户--不是其他实体--提交的数据
+Symfony自动验证这个token的准确性
+
+_token是一个隐藏字段且在form_end() 的时候自动在你的模板里渲染,确保所有没有渲染的字段一起输出
+
+CRSF也一可以在一个表单中自定义,例如
+
+    use Symfony\Component\OptionsResolver\OptionsResolver;
+
+    class TaskType extends AbstractType
+    {
+        // ...
+
+        public function configureOptions(OptionsResolver $resolver)
+        {
+            $resolver->setDefaults(array(
+                'data_class'      => 'AppBundle\Entity\Task',
+                'csrf_protection' => true,
+                'csrf_field_name' => '_token',
+                // a unique key to help generate the secret token
+                'intention'       => 'task_item',
+            ));
+        }
+
+        // ...
+    }
+
+设置csrf_protection 选项为false禁用CRSF,也可以在你项目中全局的设定,更过的信息参考表单配置相关章节
+
+附注：
+> intention选项是可选,但是给每个表单配置不同的值极大的增加生成token的安全性
+
+CRSF意味着每个用户的值是不同的,如果尝试缓存页面包括这种保护你就需要十分小心了,更多的信息查看缓存包含CRSF防护表单页面；
