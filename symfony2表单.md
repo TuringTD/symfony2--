@@ -917,57 +917,6 @@ form_theme标签(在Twig里)导入定义片段的模板且当表单渲染的时�
 
 更广泛的信息,查看"如何自定义表单渲染"
 
-##不用一个类来使用表单
-
-在大多数情况下,一个表单捆绑一个对象且表单获取和存储每个字段的值都对应这个对象中的程序属性,在这一节你所看到的完全都是在Task类里,
-
-有时候,你也许想要不要一个类来使用表单且获取提交数据返回一个数组,这个实际上非常简单
-
-    //确保你导入了Request类的命令空间
-    use Symfony\Component\HttpFoundation\Request;
-    // ...
-
-    public function contactAction(Request $request)
-    {
-        $defaultData = array('message' => 'Type your message here');
-        $form = $this->createFormBuilder($defaultData)
-            ->add('name', 'text')
-            ->add('email', 'email')
-            ->add('message', 'textarea')
-            ->add('send', 'submit')
-            ->getForm();
-
-        $form->handleRequest($request);
-
-        if ($form->isValid()) {
-            // data 是一个数组,键为 "name", "email", and "message"
-            $data = $form->getData();
-        }
-
-        //渲染表单....
-    }
-
-默认,一个表单实际认为你想要通过一个数组的数据来工作而不是一个对象，这有两种方式能够完全地改变这一行为和绑定一个对象到表单上
-
-1. 创建一个表单的时候传递一个对象(作为createFormBuilder的第一个参数 和 createForm的第二个参数);
-2. 给你的表单申明data_class选项
-
-如果你不这么做,表单返回数据将会是一个数组,在这个例子中,因为$defaultData 不是一个对象(也没有设置data_class选项),`$form->getData() `
-最终返回一个数组
-
-小提示:
-
->你也能够直接通过request对象获取POST值
-
-`$request->request->get('name');`
-
-建议,在大多数情况下使用`getData()`方法是一个好的选择,因为它返回的数据(通常是对象)是竟要表单组件转化后的
-
-
-##增加验证
-
-现在唯一缺少的部分是验证,通常,当你调用`$form->isValid()`
-
 ##表单片段的命名
 
 在symfony中,表单的每部分渲染--html表单元素,错误,label,等等都定义在一个基本主题中,在twig中这是一个block的集合在PHP中这是一个集合模板文件
@@ -1105,3 +1054,88 @@ CRSF也一可以在一个表单中自定义,例如
 > intention选项是可选,但是给每个表单配置不同的值极大的增加生成token的安全性
 
 CRSF意味着每个用户的值是不同的,如果尝试缓存页面包括这种保护你就需要十分小心了,更多的信息查看缓存包含CRSF防护表单页面；
+
+##不用一个类来使用表单
+
+在大多数情况下,一个表单捆绑一个对象且表单获取和存储每个字段的值都对应这个对象中的程序属性,在这一节你所看到的完全都是在Task类里,
+
+有时候,你也许想要不要一个类来使用表单且获取提交数据返回一个数组,这个实际上非常简单
+
+    //确保你导入了Request类的命令空间
+    use Symfony\Component\HttpFoundation\Request;
+    // ...
+
+    public function contactAction(Request $request)
+    {
+        $defaultData = array('message' => 'Type your message here');
+        $form = $this->createFormBuilder($defaultData)
+            ->add('name', 'text')
+            ->add('email', 'email')
+            ->add('message', 'textarea')
+            ->add('send', 'submit')
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isValid()) {
+            // data 是一个数组,键为 "name", "email", and "message"
+            $data = $form->getData();
+        }
+
+        //渲染表单....
+    }
+
+默认,一个表单实际认为你想要通过一个数组的数据来工作而不是一个对象，这有两种方式能够完全地改变这一行为和绑定一个对象到表单上
+
+1. 创建一个表单的时候传递一个对象(作为createFormBuilder的第一个参数 和 createForm的第二个参数);
+2. 给你的表单申明data_class选项
+
+如果你不这么做,表单返回数据将会是一个数组,在这个例子中,因为$defaultData 不是一个对象(也没有设置data_class选项),`$form->getData() `
+最终返回一个数组
+
+小提示:
+
+>你也能够直接通过request对象获取POST值
+
+`$request->request->get('name');`
+
+建议,在大多数情况下使用`getData()`方法是一个好的选择,因为它返回的数据(通常是对象)是竟要表单组件转化后的
+
+
+##增加验证
+
+现在唯一缺少的部分是验证,通常,当你调用`$form->isValid()`,通过读取类应用的约束来验证这个对象,如果你的表单映射的是一个对象(如:你使用data_class
+选项或传递一个对象到表单)这差不多是你想用的方法,查看验证章节获取更详细的信息；
+
+但是如果你的表单映射的不是一个对象且反倒你想要接收提交的数据是一个简单的数组,你如和在你表单中增加约束呢?
+
+这个答案是设置约束你自己并将它们附加到各个字段,整体的验证方法在验证章节会讲解的多一些,这儿只是hi一个简短的例子
+
+    use Symfony\Component\Validator\Constraints\Length;
+    use Symfony\Component\Validator\Constraints\NotBlank;
+
+    $builder
+       ->add('firstName', 'text', array(
+           'constraints' => new Length(array('min' => 3)),
+       ))
+       ->add('lastName', 'text', array(
+           'constraints' => array(
+               new NotBlank(),
+               new Length(array('min' => 3)),
+           ),
+       ))
+    ;
+
+小提示:
+>如果你用到了验证组,无论是当你创建表单时还是添加约束设置正确的组时你都需要引用Default组
+
+`new NotBlank(array('groups' => array('create', 'update'))`
+
+##最终的思考
+
+你现在知道了为了给应用程序创建建立复杂功能的表单创建block是必要的,当我们创建一个表单,记住表单的第一个任务是把一个对象(Task)转化成html 表单
+以便用户修改它的数据,第二个任务就是把用户提交的数据重新应用到对象上;
+
+还有很多的表单强大功能需要学习,比如,如何在Doctrine里上传文件,如何创建一个可以添加动态数量的子表单的表单(如 提交前你可以通过js添加更多的字段)
+在cookbook中查看这些主题，一定要依赖于字段类型的参考文档,其中包括了如何使用每个字段选项的例子;
+
