@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6adf933b-d5dc-4a95-b22b-1f12d540ffb5" name="Default" comment="">
-      <change type="DELETED" beforePath="D:\xampp\htdocs\symfony2Doc\symfony2表单.md" afterPath="" />
-      <change type="DELETED" beforePath="D:\xampp\htdocs\symfony2Doc\symfony2表单.txt" afterPath="" />
-      <change type="DELETED" beforePath="D:\xampp\htdocs\symfony2Doc\如何自定义表单渲染.md" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/表单/如何自定义表单渲染.md" afterPath="$PROJECT_DIR$/表单/如何自定义表单渲染.md" />
     </list>
     <ignored path="symfony2--.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,13 +28,13 @@
     <leaf>
       <file leaf-file-name="如何自定义表单渲染.md" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/表单/如何自定义表单渲染.md">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="364" column="30" selection-start="9657" selection-end="9657" vertical-scroll-proportion="0.5664845" vertical-offset="5877" max-vertical-offset="6460">
-              <folding />
-            </state>
-          </provider>
           <provider editor-type-id="MarkdownPreviewEditor">
             <state />
+          </provider>
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="501" column="3" selection-start="13311" selection-end="13311" vertical-scroll-proportion="1.1814947" vertical-offset="7606" max-vertical-offset="8704">
+              <folding />
+            </state>
           </provider>
         </entry>
       </file>
@@ -60,10 +59,10 @@
   </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="-91" />
-    <option name="y" value="28" />
-    <option name="width" value="883" />
-    <option name="height" value="744" />
+    <option name="x" value="111" />
+    <option name="y" value="119" />
+    <option name="width" value="1249" />
+    <option name="height" value="1029" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -131,7 +130,12 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="FullScreen" value="false" />
-    <property name="SearchEverywhereHistory" value="&#10;bl" />
+    <property name="SearchEverywhereHistory" value="ruguo&#10;ze&#10;bl" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../ccod2" />
+    <property name="options.lastSelected" value="Template Data Languages" />
+    <property name="options.splitter.main.proportions" value="0.3" />
+    <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="RunManager">
     <configuration default="true" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
@@ -142,10 +146,6 @@
       <method />
     </configuration>
     <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug" singleton="true">
-      <method />
-    </configuration>
-    <configuration default="true" type="NodeJSConfigurationType" factoryName="Node.js" working-dir="">
-      <browser start="false" url="" with-js-debugger="false" />
       <method />
     </configuration>
     <configuration default="true" type="PhpUnitRemoteRunConfigurationType" factoryName="PHPUnit on Server">
@@ -163,7 +163,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-91" y="28" width="883" height="744" extended-state="0" />
+    <frame x="111" y="119" width="1249" height="1029" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3273906" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -171,7 +171,8 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.19675925" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Code Outline" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31034482" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3284553" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
@@ -204,23 +205,43 @@
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/表单/如何自定义表单渲染.md">
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="418" column="0" selection-start="10809" selection-end="10809" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="7293">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/表单/如何自定义表单渲染.md">
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="364" column="30" selection-start="9657" selection-end="9657" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="6460">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/表单/如何自定义表单渲染.md">
+      <provider selected="true" editor-type-id="MarkdownPreviewEditor">
+        <state />
+      </provider>
       <provider editor-type-id="text-editor">
         <state line="37" column="78" selection-start="833" selection-end="833" vertical-scroll-proportion="0.0" vertical-offset="203" max-vertical-offset="765">
           <folding />
         </state>
       </provider>
-      <provider selected="true" editor-type-id="MarkdownPreviewEditor">
-        <state />
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/表单/如何自定义表单渲染.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="364" column="30" selection-start="9657" selection-end="9657" vertical-scroll-proportion="0.5664845" vertical-offset="5877" max-vertical-offset="6460">
-          <folding />
-        </state>
-      </provider>
       <provider editor-type-id="MarkdownPreviewEditor">
         <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="501" column="3" selection-start="13311" selection-end="13311" vertical-scroll-proportion="1.1814947" vertical-offset="7606" max-vertical-offset="8704">
+          <folding />
+        </state>
       </provider>
     </entry>
   </component>
