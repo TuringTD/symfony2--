@@ -1,16 +1,16 @@
-°²È«·ÖÎªÁ½²½£»ÈÏÖ¤£¬È¨ÏŞ
-Ò». ÈÏÖ¤
-1£¬»ù±¾µÄhttpÈÏÖ¤
+ï»¿å®‰å…¨åˆ†ä¸ºä¸¤æ­¥ï¼›è®¤è¯ï¼Œæƒé™
+ä¸€. è®¤è¯
+1ï¼ŒåŸºæœ¬çš„httpè®¤è¯
 # app/config/security.yml
 security:
     firewalls:
         secured_area:
-            pattern:   ^/ #Æ¥Åäurl 
-            anonymous: ~ #ÔÊĞíÄäÃûÓÃ»§
+            pattern:   ^/ #åŒ¹é…url 
+            anonymous: ~ #å…è®¸åŒ¿åç”¨æˆ·
             http_basic:
-                realm: "Secured Demo Area" #µ¯³ö¿òµÄÌáÊ¾ĞÅÏ¢
-    access_control: #·ÃÎÊ¿ØÖÆ
-        - { path: ^/admin/, roles: ROLE_ADMIN } #ÒÔadmin¿ªÍ·µÄÂ·ÓÉ ĞèÒªÓĞROLE_ADMIN½ÇÉ«
+                realm: "Secured Demo Area" #å¼¹å‡ºæ¡†çš„æç¤ºä¿¡æ¯
+    access_control: #è®¿é—®æ§åˆ¶
+        - { path: ^/admin/, roles: ROLE_ADMIN } #ä»¥adminå¼€å¤´çš„è·¯ç”± éœ€è¦æœ‰ROLE_ADMINè§’è‰²
         # Include the following line to also secure the /admin path itself
         # - { path: ^/admin$, roles: ROLE_ADMIN }
     providers:
@@ -22,7 +22,7 @@ security:
     encoders:
         Symfony\Component\Security\Core\User\User: plaintext
 
-2£¬´«Í³µÇÂ½±íµ¥
+2ï¼Œä¼ ç»Ÿç™»é™†è¡¨å•
 # app/config/security.yml
 security:
     firewalls:
@@ -30,11 +30,11 @@ security:
             pattern:   ^/
             anonymous: ~
             form_login:
-                login_path: login #Â·ÓÉÃû³Æ
+                login_path: login #è·¯ç”±åç§°
                 check_path: login_check
 				
 
-±àĞ´ÑéÖ¤µÇÂ½ĞÅÏ¢¿ØÖÆÆ÷
+ç¼–å†™éªŒè¯ç™»é™†ä¿¡æ¯æ§åˆ¶å™¨
 // src/Acme/SecurityBundle/Controller/SecurityController.php;
 namespace Acme\SecurityBundle\Controller;
 
@@ -73,7 +73,7 @@ class SecurityController extends Controller
         );
     }
 }
-µÇÂ½µÄÄ£°å
+ç™»é™†çš„æ¨¡æ¿
 {# src/Acme/SecurityBundle/Resources/views/Security/login.html.twig #}
 {% if error %}
     <div>{{ error.message }}</div>
@@ -94,30 +94,30 @@ class SecurityController extends Controller
     <button type="submit">login</button>
 </form>	
 
-±ÜÃâµÄÏİÚå
-1È·±£login,login_checkÂ·ÓÉ´æÔÚ
-2,È·±£loginÂ·ÓÉÊÇ°²È«£¨²»ĞèÒª±»ÑéÖ¤£©,·ñÔòËÀÑ­»·
-	´íÎóµÄ
+é¿å…çš„é™·é˜±
+1ç¡®ä¿login,login_checkè·¯ç”±å­˜åœ¨
+2,ç¡®ä¿loginè·¯ç”±æ˜¯å®‰å…¨ï¼ˆä¸éœ€è¦è¢«éªŒè¯ï¼‰,å¦åˆ™æ­»å¾ªç¯
+	é”™è¯¯çš„
     access_control:
         - { path: ^/, roles: ROLE_ADMIN } 
-	ÕıÈ·µÄ
+	æ­£ç¡®çš„
 	access_control:
     - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
     - { path: ^/, roles: ROLE_ADMIN }
-  Èç¹ûÍøÕ¾²»ÔÊĞíÄäÃûÕË»§µÇÂ½£¬ÔòĞèÒªÅäÖÃÒ»¸ö·À»ğÇ½ÔÊĞí·ÃÎÊloginÒ³Ãæ
+  å¦‚æœç½‘ç«™ä¸å…è®¸åŒ¿åè´¦æˆ·ç™»é™†ï¼Œåˆ™éœ€è¦é…ç½®ä¸€ä¸ªé˜²ç«å¢™å…è®¸è®¿é—®loginé¡µé¢
   firewalls:
     login_firewall:
         pattern:   ^/login$
         anonymous: ~
-3£¬È·±£check_loginÔÚ·À»ğÇ½ÄÚ£»
+3ï¼Œç¡®ä¿check_loginåœ¨é˜²ç«å¢™å†…ï¼›
 
-¶ş,È¨ÏŞ
-Ò»°ãÊÇURL Ö¸¶¨È¨ÏŞ
-Æ¥ÅäÑ¡Ïî(access_control)
-path Â·ÓÉ(Ê¹ÓÃÕıÔò)
-ip or ips (ÏŞÖÆIP)
-host (ÏŞÖÆÖ÷»ú)
-methods (ÏŞÖÆÇëÇó·½·¨)
+äºŒ,æƒé™
+ä¸€èˆ¬æ˜¯URL æŒ‡å®šæƒé™
+åŒ¹é…é€‰é¡¹(access_control)
+path è·¯ç”±(ä½¿ç”¨æ­£åˆ™)
+ip or ips (é™åˆ¶IP)
+host (é™åˆ¶ä¸»æœº)
+methods (é™åˆ¶è¯·æ±‚æ–¹æ³•)
 
 security:
     # ...
@@ -125,7 +125,7 @@ security:
         - { path: ^/esi, roles: IS_AUTHENTICATED_ANONYMOUSLY, ips: [127.0.0.1, ::1] }
         - { path: ^/esi, roles: ROLE_NO_ACCESS }
 		
-Í¨¹ı±í´ïÊ½
+é€šè¿‡è¡¨è¾¾å¼
 # app/config/security.yml
 security:
     # ...
@@ -133,15 +133,15 @@ security:
         -
             path: ^/_internal/secure
             allow_if: "'127.0.0.1' == request.getClientIp() or has_role('ROLE_ADMIN')"
-request ÇëÇó¶ÔÏó£»
+request è¯·æ±‚å¯¹è±¡ï¼›
 
-Ç¿ÖÆÍ¨µÀ£¨http,https£©
+å¼ºåˆ¶é€šé“ï¼ˆhttp,httpsï¼‰
 # app/config/security.yml
 security:
     # ...
     access_control:
         - { path: ^/cart/checkout, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }		
-ÔÚ¿ØÖÆÆ÷ÖĞ¿ØÖÆ
+åœ¨æ§åˆ¶å™¨ä¸­æ§åˆ¶
 public function helloAction($name)
 {
     if (false === $this->get('security.context')->isGranted('ROLE_ADMIN')) {
@@ -150,18 +150,18 @@ public function helloAction($name)
     // ...
 }
 
-Ìá¹©ÓÃ»§
+æä¾›ç”¨æˆ·
 #    providers:
 ##        in_memory:
-##            memory: #´æÔÚÄÚ´æÖĞ
+##            memory: #å­˜åœ¨å†…å­˜ä¸­
 ##                users:
 ##                    user:  { password: userpass, roles: [ 'ROLE_USER' ] }
 ##                    admin: { password: adminpass, roles: [ 'ROLE_ADMIN' ] }
 #         my_entity_providers:
-#            entity: #´ÓÊı¾İ¿âÖĞÈ¥
-#                class: AcmeDemoBundle:Users #UsersĞèÒªÊµÏÖUserinterface½Ó¿Ú
+#            entity: #ä»æ•°æ®åº“ä¸­å»
+#                class: AcmeDemoBundle:Users #Userséœ€è¦å®ç°Userinterfaceæ¥å£
 
-±àÂëÓÃ»§ÃÜÂë
+ç¼–ç ç”¨æˆ·å¯†ç 
 security:
     # ...
     providers:
@@ -180,7 +180,7 @@ security:
             algorithm: bcrypt
             cost: 12
 
-ÔÚ¿ØÖÆÆ÷ÖĞ¼ÓÃÜÃÜÂë
+åœ¨æ§åˆ¶å™¨ä¸­åŠ å¯†å¯†ç 
 $factory = $this->get('security.encoder_factory');
 $user = new Acme\UserBundle\Entity\User();
 
@@ -188,21 +188,23 @@ $encoder = $factory->getEncoder($user);
 $password = $encoder->encodePassword('ryanpass', $user->getSalt());
 $user->setPassword($password);			
 	
-ÎŞ×´Ì¬ ÈÏÖ¤£¨²»´æĞÅÏ¢µ½cookie£©
+æ— çŠ¶æ€ è®¤è¯ï¼ˆä¸å­˜ä¿¡æ¯åˆ°cookieï¼‰
 security:
     firewalls:
         main:
             http_basic: ~
             stateless:  true
 
-±È½Ï×Ö·û´®
+æ¯”è¾ƒå­—ç¬¦ä¸²
 use Symfony\Component\Security\Core\Util\StringUtils;
 // is password1 equals to password2?
 $bool = StringUtils::equals($password1, $password2);
 
-Éú³ÉÒ»¸ö°²È«µÄËæ»úÊı£»
+ç”Ÿæˆä¸€ä¸ªå®‰å…¨çš„éšæœºæ•°ï¼›
 use Symfony\Component\Security\Core\Util\SecureRandom;
 
 $generator = new SecureRandom();
 $random = $generator->nextBytes(10);
+
+
 
