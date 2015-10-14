@@ -1,0 +1,50 @@
+检验用户是否登录
+public function helloAction($name)
+{
+    if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+        throw $this->createAccessDeniedException();
+    }
+
+    // ...
+}
+
+通过security.authorization_checker服务来控制访问权限
+public function helloAction($name)
+{
+    // The second parameter is used to specify on what object the role is tested.
+    $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'Unable to access this page!');
+
+    // Old way :
+    // if (false === $this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+    //     throw $this->createAccessDeniedException('Unable to access this page!');
+    // }
+
+    // ...
+}
+
+
+获取用户对象
+
+public function indexAction()
+{
+    if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+        throw $this->createAccessDeniedException();
+    }
+
+    $user = $this->getUser();
+
+    // the above is a shortcut for this
+    $user = $this->get('security.token_storage')->getToken()->getUser();
+}
+
+比较字符串
+use Symfony\Component\Security\Core\Util\StringUtils;
+// is password1 equals to password2?
+$bool = StringUtils::equals($password1, $password2);
+
+生成一个安全的随机数
+use Symfony\Component\Security\Core\Util\SecureRandom;
+$generator = new SecureRandom();
+$random = $generator->nextBytes(10);
+
+
