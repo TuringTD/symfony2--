@@ -1,0 +1,32 @@
+# To get started with security, check out the documentation:
+# http://symfony.com/doc/current/book/security.html
+security:
+
+    # http://symfony.com/doc/current/book/security.html#where-do-users-come-from-user-providers
+    providers:
+        in_memory:
+            memory:
+              users:
+                 admin:
+                   password: 123456
+                   roles: ROLE_ADMIN
+                 haha:
+                   password: 123456
+                   roles: ROLE_HAHA
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+
+    firewalls:
+        # disables authentication for assets and the profiler, adapt it according to your needs
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        http:
+            anonymous: false
+            http_basic: ~
+            stateless: true
+            logout:
+                path: /logout
+    access_control:
+        - {path: ^/http, roles: ROLE_ADMIN}
